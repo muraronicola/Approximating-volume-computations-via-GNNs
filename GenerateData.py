@@ -67,7 +67,12 @@ def generate_n_polytopes(n_polytopes, base_path="./data/", seed=0, m=4, r=3, sav
         
         if is_valid:
             polytope = Polytope(A=A, b=b)
-            volume = polytope.volume()
+
+            try:
+                volume = polytope.volume()
+            except:
+                print("Error in volume calculation, not enough points")
+                continue
             
             x = np.concatenate((A, b.reshape(-1, 1)), axis=1)
             if not only_exact:
@@ -106,14 +111,14 @@ def load_data(filename):
 
 
 def main():
-    m_array = [4] #[4, 5, 6] #range(3, 8)
-    r_array = [2] #[3, 4] #range(4, 5)
-    n_polytopes = 10 #10000 #50
+    m_array = range(3, 8) #[4, 5, 6] #range(3, 8)
+    r_array = range(3, 5) #[3, 4] #range(4, 5)
+    n_polytopes = 100 #10000 #50
     seed = 0
     
     for r, m in product(r_array, m_array):
         if m > r:
-            generate_n_polytopes(n_polytopes, base_path="./data/", seed=seed, m=m, r=r, only_exact=True)
+            generate_n_polytopes(n_polytopes, base_path="./data/", seed=seed, m=m, r=r, only_exact=False)
         else:
             print("m must be greater than r")
 

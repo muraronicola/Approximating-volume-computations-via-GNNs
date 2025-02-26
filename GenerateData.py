@@ -94,7 +94,7 @@ def generate_n_polytopes(n_polytopes, base_path="./data/", seed=0, m=4, r=3, sav
     
     if not only_exact:
         np.save(path + "all_polytopes_x.npy", data_x)
-        np.save(path + "all_polytopes_y.npy", data_y)
+        np.save(path + "all_polytopes_y.npy", data_y) 
         
     np.save(path + "exact_politopes_x.npy", data_exact_politope_x)
     np.save(path + "exact_politopes_y.npy", data_exact_politope_y)

@@ -56,8 +56,10 @@ def generate_n_polytopes(n_polytopes, base_path="./data/", seed=0, m=4, r=3, sav
     path = base_path + "m_" + str(m) + "_r_" + str(r) + "/"
     os.makedirs(path, exist_ok=True)
     
-    data = []
-    data_exact_politope = []
+    data_x = []
+    data_y = []
+    data_exact_politope_x = []
+    data_exact_politope_y = []
     
     i = 0
     while i < n_polytopes:
@@ -67,26 +69,35 @@ def generate_n_polytopes(n_polytopes, base_path="./data/", seed=0, m=4, r=3, sav
             polytope = Polytope(A=A, b=b)
             volume = polytope.volume()
             
+            x = np.concatenate((A, b.reshape(-1, 1)), axis=1)
             if not only_exact:
-                data.append([A, b, volume])
+                data_x.append(x)
+                data_y.append(volume)
             
             if check_exact_polytope(volume, A, b, m):
                 if r <= 3:
                     plot_polytope(polytope, save=save_images, show=False, filename=path + "politope_" + str(i) + ".png")
                 
-                data_exact_politope.append([A, b, volume])
+                data_exact_politope_x.append(x)
+                data_exact_politope_y.append(volume)
                 i += 1
         
         if i == 10 and save_images: 
             save_images = False
 
     if not only_exact:
-        data = np.array(data, dtype=object)
-    data_exact_politope = np.array(data_exact_politope, dtype=object)
+        data_x = np.array(data_x, dtype=object)
+        data_y = np.array(data_y, dtype=object)
+        
+    data_exact_politope_x = np.array(data_exact_politope_x, dtype=object)
+    data_exact_politope_y = np.array(data_exact_politope_y, dtype=object)
     
     if not only_exact:
-        np.save(path + "all_polytopes.npy", data)
-    np.save(path + "exact_politopes.npy", data_exact_politope)
+        np.save(path + "all_polytopes_x.npy", data_x)
+        np.save(path + "all_polytopes_y.npy", data_y)
+        
+    np.save(path + "exact_politopes_x.npy", data_exact_politope_x)
+    np.save(path + "exact_politopes_y.npy", data_exact_politope_y)
     
 
 def load_data(filename):
@@ -94,11 +105,10 @@ def load_data(filename):
     return data
 
 
-
 def main():
-    m_array = [4, 5, 6] #range(3, 8)
-    r_array = [3, 4] #range(4, 5)
-    n_polytopes = 10000 #50
+    m_array = [4] #[4, 5, 6] #range(3, 8)
+    r_array = [2] #[3, 4] #range(4, 5)
+    n_polytopes = 10 #10000 #50
     seed = 0
     
     for r, m in product(r_array, m_array):
@@ -106,7 +116,6 @@ def main():
             generate_n_polytopes(n_polytopes, base_path="./data/", seed=seed, m=m, r=r, only_exact=True)
         else:
             print("m must be greater than r")
-
 
 if __name__ == "__main__":
     #test_main()

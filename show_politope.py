@@ -19,7 +19,7 @@ def plot_polytope(polytope, save=False, show=True, filename=None):
         if show:
             plt.show()
             
-        if save:
+        if save and filename is not None:
             plt.savefig(filename)
         
         plt.close()

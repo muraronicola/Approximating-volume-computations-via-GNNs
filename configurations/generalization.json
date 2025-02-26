@@ -1,0 +1,10 @@
+{
+    "data": {
+        "train-test-separation" : true,
+        "train-test-split" : null,
+        "train-eval-split" : 0.2,
+        "train-test-data" : null,
+        "train-data": [""],
+        "test-data": [""]
+    }
+}

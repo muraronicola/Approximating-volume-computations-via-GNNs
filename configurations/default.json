@@ -1,5 +1,5 @@
 {
-    "device": "cuda:0",
+    "device": "cpu:0",
     "data": {
         "base_path": "./data/",
         "exact_polytopes": true,

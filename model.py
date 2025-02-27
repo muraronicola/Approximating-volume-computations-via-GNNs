@@ -1,8 +1,7 @@
 import torch
 from torch.nn import Linear, Dropout
 import torch.nn.functional as F
-from torch_geometric.nn import GraphConv
-from torch_geometric.nn import global_mean_pool
+from torch_geometric.nn import GraphConv, global_mean_pool
 
 
 class GCN(torch.nn.Module):
@@ -26,6 +25,11 @@ class GCN(torch.nn.Module):
 
     def forward(self, x, edge_index, batch, train=True):
         # 1. Obtain node embeddings
+        
+        """print("x", x)
+        print("edge_index", edge_index)
+        print("batch", batch)"""
+        
         x = self.conv1(x, edge_index)
         x = x.relu()
         x = self.conv2(x, edge_index)
@@ -46,5 +50,6 @@ class GCN(torch.nn.Module):
             x = self.dropout(x)
         
         x = self.out(x)
+        x = torch.flatten(x)
         
         return x

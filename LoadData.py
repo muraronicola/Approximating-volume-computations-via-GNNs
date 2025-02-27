@@ -22,13 +22,25 @@ class LoadData():
         x = np.load(self.base_path + folder_name + self.file_name + "_x.npy", allow_pickle=True)
         y = np.load(self.base_path + folder_name + self.file_name+ "_y.npy", allow_pickle=True)
         
-        x = x[:10]
+        """x = x[:10]
         y = y[:10]
-        
-        y = [1, 10000, 1, 10000, 1, 10000, 1, 10000, 1, 10000]
         
         print("x", x)
         print("y", y)
+        
+        e1 = [[1, 3, 15],
+            [2, 1, 5],
+            [2, 9, 31]]
+        
+        e2 = [[6, 7, 52],
+            [7, 11, 5],
+            [9, 8, 12]]
+        
+        x = np.array([e1, e2, e1, e2, e1, e2, e1, e2, e1, e2])
+        y = np.array([1, 100, 1, 100, 1, 100, 1, 100, 1, 100])
+        
+        print("x", x)
+        print("y", y)"""
         
         if train_data:
             self.x_train = x #np.append(self.x_train, x, axis=0)
@@ -48,10 +60,10 @@ class LoadData():
             first_cut = dev_split_size+test_split_size
             second_cut = dev_split_size/first_cut
 
-            x_train, x_test, y_train, y_test = train_test_split(self.x_train, self.y_train, test_size=first_cut, random_state=0)
+            x_train, x_test, y_train, y_test = train_test_split(self.x_train, self.y_train, test_size=first_cut, random_state=0, shuffle=False)
             x_test, x_dev, y_test, y_dev = train_test_split(x_test, y_test, test_size=second_cut, random_state=0)
         else:
-            x_train, x_dev, y_train, y_dev = train_test_split(self.x_train, self.y_train, test_size=dev_split_size, random_state=0)
+            x_train, x_dev, y_train, y_dev = train_test_split(self.x_train, self.y_train, test_size=dev_split_size, random_state=0, shuffle=False)
             x_test = self.x_test
             y_test = self.y_test
         
@@ -74,8 +86,8 @@ class LoadData():
         du_dev = du.DataUnit(x_dev, y_dev)
         du_test = du.DataUnit(x_test, y_test)
         
-        train_loader = DataLoader(du_train, batch_size=train_batch_size, shuffle=True)
-        dev_loader = DataLoader(du_dev, batch_size=train_batch_size, shuffle=True)
-        test_loader = DataLoader(du_test, batch_size=eval_batch_size, shuffle=True)
+        train_loader = DataLoader(du_train, batch_size=train_batch_size, shuffle=False)
+        dev_loader = DataLoader(du_dev, batch_size=train_batch_size, shuffle=False)
+        test_loader = DataLoader(du_test, batch_size=eval_batch_size, shuffle=False)
         
         return train_loader, dev_loader, test_loader

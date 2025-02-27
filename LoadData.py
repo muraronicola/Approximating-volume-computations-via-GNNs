@@ -3,6 +3,7 @@ import torch
 from sklearn.model_selection import train_test_split
 import DataUnit as du
 from torch_geometric.loader import DataLoader
+from sklearn.preprocessing import StandardScaler
 
 class LoadData():
     def __init__(self, base_path="./data/", exact_polytopes=True):
@@ -20,6 +21,13 @@ class LoadData():
     def add_dataset(self, folder_name, train_data=True): #I can train on r3 and test on r4. Right now i can't train on r4 and r3
         x = np.load(self.base_path + folder_name + self.file_name + "_x.npy", allow_pickle=True)
         y = np.load(self.base_path + folder_name + self.file_name+ "_y.npy", allow_pickle=True)
+        
+        x = x[:10]
+        y = y[:10]
+        
+        print("x", x)
+        print("y", y)
+        #y = [10, 11, 12, 13, 14]
         
         if train_data:
             self.x_train = x #np.append(self.x_train, x, axis=0)
@@ -45,6 +53,22 @@ class LoadData():
             x_train, x_dev, y_train, y_dev = train_test_split(self.x_train, self.y_train, test_size=dev_split_size, random_state=0)
             x_test = self.x_test
             y_test = self.y_test
+        
+        
+        """
+        scalers = {}
+        for i in range(x_train.shape[1]):
+            scalers[i] = StandardScaler()
+            x_train[:, i, :] = scalers[i].fit_transform(x_train[:, i, :]) 
+
+        for i in range(x_dev.shape[1]):
+            x_dev[:, i, :] = scalers[i].transform(x_dev[:, i, :])
+
+        for i in range(x_test.shape[1]):
+            x_test[:, i, :] = scalers[i].transform(x_test[:, i, :]) 
+        """
+
+            
         
         du_train = du.DataUnit(x_train, y_train)
         du_dev = du.DataUnit(x_dev, y_dev)

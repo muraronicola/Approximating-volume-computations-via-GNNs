@@ -1,7 +1,7 @@
 import torch
 from torch.nn import Linear, Dropout
 import torch.nn.functional as F
-from torch_geometric.nn import GCNConv
+from torch_geometric.nn import GraphConv
 from torch_geometric.nn import global_mean_pool
 
 
@@ -11,23 +11,25 @@ class GCN(torch.nn.Module):
         super(GCN, self).__init__()
         torch.manual_seed(seed)
         
-        self.conv1 = GCNConv(node_features, hidden_channels)
-        self.conv2 = GCNConv(hidden_channels, hidden_channels)
-        self.conv3 = GCNConv(hidden_channels, hidden_channels)
-        self.conv4 = GCNConv(hidden_channels, hidden_channels)
-        self.conv5 = GCNConv(hidden_channels, hidden_channels)
-        self.conv6 = GCNConv(hidden_channels, hidden_channels)
-        self.conv7 = GCNConv(hidden_channels, hidden_channels)
+        self.conv1 = GraphConv(node_features, hidden_channels)
+        self.conv2 = GraphConv(hidden_channels, hidden_channels)
+        """self.conv3 = GraphConv(hidden_channels, hidden_channels)
+        self.conv4 = GraphConv(hidden_channels, hidden_channels)
+        self.conv5 = GraphConv(hidden_channels, hidden_channels)
+        self.conv6 = GraphConv(hidden_channels, hidden_channels)
+        self.conv7 = GraphConv(hidden_channels, hidden_channels)"""
         
         self.dropout = Dropout(p=p_drop)
         self.out = Linear(hidden_channels, 1)
+        
+        torch.nn.init.uniform_(self.out.weight) 
 
     def forward(self, x, edge_index, batch, train=True):
         # 1. Obtain node embeddings
         x = self.conv1(x, edge_index)
         x = x.relu()
-        """x = self.conv2(x, edge_index)
-        x = x.relu()
+        x = self.conv2(x, edge_index)
+        """x = x.relu()
         x = self.conv3(x, edge_index)
         x = x.relu()
         x = self.conv4(x, edge_index)
@@ -38,12 +40,11 @@ class GCN(torch.nn.Module):
         x = x.relu()
         x = self.conv7(x, edge_index)"""
 
-        # 2. Readout layer
         x = global_mean_pool(x, batch)  # [batch_size, hidden_channels]
 
-        # 3. Apply a final classifier
         if train:
             x = self.dropout(x)
+        
         x = self.out(x)
         
         return x

@@ -11,8 +11,8 @@
         "test-data": null
     },
     "train":{
-        "train_batch_size": 512,
-        "eval_batch_size": 512,
+        "train_batch_size": 4096,
+        "eval_batch_size": 4096,
         "train_epochs": 100
     }
 }

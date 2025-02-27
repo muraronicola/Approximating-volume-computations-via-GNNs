@@ -29,6 +29,9 @@ def train(model, train_loader, optimizer, criterion, device="cpu"):
         loss.backward()
         optimizer.step()
         optimizer.zero_grad()
+    
+    print("Loss: ", loss.item())
+    #print("out: ", out.detach().cpu().numpy()[0])
 
 
 def evaluate(model, eval_loader, device="cpu"):
@@ -65,7 +68,7 @@ def main():
 
     conf_data = configuration["data"]
     load_data = LoadData(base_path=conf_data["base_path"], exact_polytopes=conf_data["exact_polytopes"])
-    load_data.add_dataset(conf_data["train-test-data"][1], train_data=True)
+    load_data.add_dataset(conf_data["train-test-data"][0], train_data=True)
     #load_data.add_dataset(conf_data["train-test-data"][1], train_data=False)
     
     node_features = load_data.get_node_features()[1]
@@ -82,7 +85,8 @@ def main():
         
     
     model = GCN(node_features=node_features, hidden_channels=256).to(device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+    #optimizer = torch.optim.SGD(model.parameters(), lr=0.000005)
     criterion = torch.nn.MSELoss()
 
     for epoch in range(1, 1000000):
@@ -91,7 +95,7 @@ def main():
         train_mse = evaluate(model, train_loader, device=device)
         test_mse = evaluate(model, test_loader, device=device)
         dev_mse = evaluate(model, dev_loader, device=device)
-        print(f'Epoch: {epoch:03d}, Train MSE: {train_mse:.4f}, Dev MSE: {dev_mse:.4f}, Test MSE: {test_mse:.4f}')
+        #print(f'Epoch: {epoch:03d}, Train MSE: {train_mse:.4f}, Dev MSE: {dev_mse:.4f}, Test MSE: {test_mse:.4f}')
 
 
 if __name__ == "__main__":

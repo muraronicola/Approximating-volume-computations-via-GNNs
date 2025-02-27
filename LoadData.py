@@ -2,7 +2,7 @@ import numpy as np
 import torch
 from sklearn.model_selection import train_test_split
 import DataUnit as du
-from torch.utils.data import DataLoader
+from torch_geometric.loader import DataLoader
 
 class LoadData():
     def __init__(self, base_path="./data/", exact_polytopes=True):
@@ -42,7 +42,6 @@ class LoadData():
             x_train, x_dev, y_train, y_dev = train_test_split(self.x_train, self.y_train, test_size=dev_split_size, random_state=0)
             x_test = self.x_test
             y_test = self.y_test
-            
         
         du_train = du.DataUnit(x_train, y_train)
         du_dev = du.DataUnit(x_dev, y_dev)

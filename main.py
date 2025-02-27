@@ -21,12 +21,16 @@ if __name__ == "__main__":
 
     conf_data = configuration["data"]
     load_data = LoadData(base_path=conf_data["base_path"], exact_polytopes=conf_data["exact_polytopes"])
-    load_data.add_dataset(conf_data["train-test-data"][0], train_data=True)
+    load_data.add_dataset(conf_data["train-test-data"][1], train_data=True)
     #load_data.add_dataset(conf_data["train-test-data"][1], train_data=False)
     
     
     conf_train = configuration["train"]
     train_loader, dev_loader, test_loader = load_data.get_dataloaders(test_split_size=conf_data["train-test-split"], dev_split_size=conf_data["train-eval-split"], train_batch_size=conf_train["train_batch_size"], eval_batch_size=conf_train["eval_batch_size"])
     
+    print(train_loader)
+    print("----------------")
     
-    
+    for batch in train_loader:
+        print(batch)
+        print("+++++")

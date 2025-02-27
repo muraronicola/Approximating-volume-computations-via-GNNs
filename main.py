@@ -38,7 +38,7 @@ def evaluate(model, eval_loader, device="cpu"):
         se = []
         for data in eval_loader:
             data.to(device)
-            out = model(data.x, data.edge_index, data.batch)
+            out = model(data.x, data.edge_index, data.batch, train=False)
             this_se = calculate_se_over_batch(out.detach().cpu().numpy(), data.y.detach().cpu().numpy())
             se.append(this_se)
             #print(out[0], data.y[0], this_mse)

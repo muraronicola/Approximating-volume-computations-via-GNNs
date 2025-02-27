@@ -1,5 +1,5 @@
 import torch
-from torch.nn import Linear
+from torch.nn import Linear, Dropout
 import torch.nn.functional as F
 from torch_geometric.nn import GCNConv
 from torch_geometric.nn import global_mean_pool
@@ -7,7 +7,7 @@ from torch_geometric.nn import global_mean_pool
 
 class GCN(torch.nn.Module):
     
-    def __init__(self, node_features, hidden_channels, seed=0):
+    def __init__(self, node_features, hidden_channels, p_drop=0.3, seed=0):
         super(GCN, self).__init__()
         torch.manual_seed(seed)
         
@@ -18,17 +18,19 @@ class GCN(torch.nn.Module):
         self.conv5 = GCNConv(hidden_channels, hidden_channels)
         self.conv6 = GCNConv(hidden_channels, hidden_channels)
         self.conv7 = GCNConv(hidden_channels, hidden_channels)
+        
+        self.dropout = Dropout(p=p_drop)
         self.out = Linear(hidden_channels, 1)
 
-    def forward(self, x, edge_index, batch):
+    def forward(self, x, edge_index, batch, train=True):
         # 1. Obtain node embeddings
         x = self.conv1(x, edge_index)
         x = x.relu()
-        x = self.conv2(x, edge_index)
+        """x = self.conv2(x, edge_index)
         x = x.relu()
         x = self.conv3(x, edge_index)
         x = x.relu()
-        """x = self.conv4(x, edge_index)
+        x = self.conv4(x, edge_index)
         x = x.relu()
         x = self.conv5(x, edge_index)
         x = x.relu()
@@ -40,6 +42,8 @@ class GCN(torch.nn.Module):
         x = global_mean_pool(x, batch)  # [batch_size, hidden_channels]
 
         # 3. Apply a final classifier
-        #x = F.dropout(x, p=0.5, training=self.training)
+        if train:
+            x = self.dropout(x)
         x = self.out(x)
+        
         return x

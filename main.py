@@ -18,10 +18,11 @@ def calculate_se_over_batch(out, y):
     return se_global
 
 
-def train(model, train_loader, optimizer, criterion):
+def train(model, train_loader, optimizer, criterion, device="cpu"):
     model.train()
 
     for data in train_loader: 
+        data.to(device)
         out = model(data.x, data.edge_index, data.batch) 
         loss = criterion(out, data.y) 
         
@@ -30,14 +31,15 @@ def train(model, train_loader, optimizer, criterion):
         optimizer.zero_grad()
 
 
-def evaluate(model, eval_loader):
+def evaluate(model, eval_loader, device="cpu"):
     model.eval()
 
     with torch.no_grad():    
         se = []
         for data in eval_loader:
+            data.to(device)
             out = model(data.x, data.edge_index, data.batch)
-            this_se = calculate_se_over_batch(out.detach().numpy(), data.y.detach().numpy())
+            this_se = calculate_se_over_batch(out.detach().cpu().numpy(), data.y.detach().cpu().numpy())
             se.append(this_se)
             #print(out[0], data.y[0], this_mse)
             
@@ -59,6 +61,7 @@ def main():
     path_configuration = args.path_configuration
     configuration = conf.get_configuration(path_configuration)
 
+    device = configuration["device"]
 
     conf_data = configuration["data"]
     load_data = LoadData(base_path=conf_data["base_path"], exact_polytopes=conf_data["exact_polytopes"])
@@ -76,17 +79,18 @@ def main():
     for batch in train_loader:
         print(batch)
         print("+++++")"""
+        
     
-    model = GCN(node_features=node_features, hidden_channels=256)
+    model = GCN(node_features=node_features, hidden_channels=256).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
     criterion = torch.nn.MSELoss()
 
     for epoch in range(1, 1000000):
-        train(model, train_loader, optimizer, criterion)
+        train(model, train_loader, optimizer, criterion, device=device)
         
-        train_mse = evaluate(model, train_loader)
-        test_mse = evaluate(model, test_loader)
-        dev_mse = evaluate(model, dev_loader)
+        train_mse = evaluate(model, train_loader, device=device)
+        test_mse = evaluate(model, test_loader, device=device)
+        dev_mse = evaluate(model, dev_loader, device=device)
         print(f'Epoch: {epoch:03d}, Train MSE: {train_mse:.4f}, Dev MSE: {dev_mse:.4f}, Test MSE: {test_mse:.4f}')
 
 

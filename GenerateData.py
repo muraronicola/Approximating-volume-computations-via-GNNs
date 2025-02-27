@@ -5,7 +5,8 @@ from scipy.optimize import linprog
 from scipy.spatial import HalfspaceIntersection, ConvexHull
 from pycvxset import Polytope, Ellipsoid, spread_points_on_a_unit_sphere
 import os
-from tqdm.contrib.itertools import product
+import argparse
+from tqdm import tqdm
 
 def is_bounded(A, b):
     n = A.shape[1]
@@ -61,6 +62,8 @@ def generate_n_polytopes(n_polytopes, base_path="./data/", seed=0, m=4, r=3, sav
     data_exact_politope_x = []
     data_exact_politope_y = []
     
+
+    pbar = tqdm(total=n_polytopes)
     i = 0
     while i < n_polytopes:
         is_valid, A, b = generate_polytope(rng, m=m, r=r)
@@ -86,6 +89,7 @@ def generate_n_polytopes(n_polytopes, base_path="./data/", seed=0, m=4, r=3, sav
                 data_exact_politope_x.append(x)
                 data_exact_politope_y.append(volume)
                 i += 1
+                pbar.update(1)
         
         if i == 10 and save_images: 
             save_images = False
@@ -111,16 +115,37 @@ def load_data(filename):
 
 
 def main():
-    m_array = range(3, 8) #[4, 5, 6] #range(3, 8)
-    r_array = range(3, 5) #[3, 4] #range(4, 5)
-    n_polytopes = 100 #10000 #50
-    seed = 0
+
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("-r", type=int, default=0, help="specify the path to the configuration file")
+    parser.add_argument("-m", type=int, default=0, help="specify the path to the configuration file")
+    parser.add_argument("-n", type=int, default=100, help="specify the path to the configuration file")
+
+    args = parser.parse_args()
+
+    r_console = args.r
+    m_console = args.m
+    n_polytopes_console = args.n
+
+
+    if r_console != 0 and m_console != 0:
+        r_array = [r_console]
+        m_array = [m_console]
+        n_polytopes = n_polytopes_console
+    else:
+        m_array = range(3, 8)
+        r_array = range(3, 5)
+        n_polytopes = 100
     
-    for r, m in product(r_array, m_array):
-        if m > r:
-            generate_n_polytopes(n_polytopes, base_path="./data/", seed=seed, m=m, r=r, only_exact=False)
-        else:
-            print("m must be greater than r")
+    seed = 0
+
+    for r in r_array:   
+        for m in m_array:
+            if m > r:
+                generate_n_polytopes(n_polytopes, base_path="./data/", seed=seed, m=m, r=r, only_exact=False)
+            else:
+                print("m must be greater than r")
 
 if __name__ == "__main__":
     #test_main()

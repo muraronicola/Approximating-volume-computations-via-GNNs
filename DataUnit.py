@@ -21,6 +21,7 @@ class DataUnit(Dataset):
             
             torch_x = torch.tensor(this_x.astype('float64'), dtype=torch.float)
             torch_y = torch.tensor(this_y, dtype=torch.float)
+            #torch_y = torch.tensor(100, dtype=torch.float)
             converted_data.append(Data(x=torch_x, edge_index=edge_index, y=torch_y))
         
         self.data = converted_data

@@ -84,9 +84,10 @@ def main():
     for epoch in range(1, 1000000):
         train(model, train_loader, optimizer, criterion)
         
-        train_acc = evaluate(model, train_loader)
-        test_acc = evaluate(model, test_loader)
-        print(f'Epoch: {epoch:03d}, Train MSE: {train_acc:.4f}, Test MSE: {test_acc:.4f}')
+        train_mse = evaluate(model, train_loader)
+        test_mse = evaluate(model, test_loader)
+        dev_mse = evaluate(model, test_loader)
+        print(f'Epoch: {epoch:03d}, Train MSE: {train_mse:.4f}, Dev MSE: {dev_mse:.4f}, Test MSE: {test_mse:.4f}')
 
 
 if __name__ == "__main__":

@@ -25,9 +25,10 @@ class LoadData():
         x = x[:10]
         y = y[:10]
         
+        y = [1, 10000, 1, 10000, 1, 10000, 1, 10000, 1, 10000]
+        
         print("x", x)
         print("y", y)
-        #y = [10, 11, 12, 13, 14]
         
         if train_data:
             self.x_train = x #np.append(self.x_train, x, axis=0)
@@ -68,7 +69,6 @@ class LoadData():
             x_test[:, i, :] = scalers[i].transform(x_test[:, i, :]) 
         """
 
-            
         
         du_train = du.DataUnit(x_train, y_train)
         du_dev = du.DataUnit(x_dev, y_dev)

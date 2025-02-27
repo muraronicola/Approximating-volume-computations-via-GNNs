@@ -143,6 +143,7 @@ def main():
     for r in r_array:   
         for m in m_array:
             if m > r:
+                print("\nGenerating polytopes with m =", m, "and r =", r)
                 generate_n_polytopes(n_polytopes, base_path="./data/", seed=seed, m=m, r=r, only_exact=False)
             else:
                 print("m must be greater than r")

@@ -83,7 +83,7 @@ def generate_n_polytopes(n_polytopes, base_path="./data/", seed=0, m=4, r=3, sav
                 data_y.append(volume)
             
             if check_exact_polytope(volume, A, b, m):
-                if r <= 3:
+                if r <= 3 and save_images:
                     plot_polytope(polytope, save=save_images, show=False, filename=path + "politope_" + str(i) + ".png")
                 
                 data_exact_politope_x.append(x)
@@ -144,7 +144,7 @@ def main():
         for m in m_array:
             if m > r:
                 print("\nGenerating polytopes with m =", m, "and r =", r)
-                generate_n_polytopes(n_polytopes, base_path="./data/", seed=seed, m=m, r=r, only_exact=False)
+                generate_n_polytopes(n_polytopes, base_path="./data/", seed=seed, m=m, r=r, only_exact=True)
             else:
                 print("m must be greater than r")
 

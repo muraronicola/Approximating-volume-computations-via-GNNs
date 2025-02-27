@@ -20,7 +20,7 @@ class DataUnit(Dataset):
             edge_index = torch.tensor(edge_index, dtype=torch.long).t().contiguous()
             
             torch_x = torch.tensor(this_x.astype('float64'), dtype=torch.float)
-            torch_y = torch.tensor(this_y.astype('float64'), dtype=torch.float)
+            torch_y = torch.tensor(this_y, dtype=torch.float)
             converted_data.append(Data(x=torch_x, edge_index=edge_index, y=torch_y))
         
         self.data = converted_data

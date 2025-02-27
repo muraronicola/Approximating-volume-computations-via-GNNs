@@ -23,11 +23,14 @@ class LoadData():
         
         if train_data:
             self.x_train = x #np.append(self.x_train, x, axis=0)
-            self.y_train = x #np.append(self.y_train, y, axis=0)
+            self.y_train = y #np.append(self.y_train, y, axis=0)
         else:
             self.x_test = x #np.append(self.x_test, x, axis=0)
             self.y_test = y #np.append(self.y_test, y, axis=0)
     
+
+    def get_node_features(self):
+        return self.x_train[0].shape
 
 
     def get_dataloaders(self, dev_split_size=0.2, test_split_size=0.2, train_batch_size=16, eval_batch_size=32):

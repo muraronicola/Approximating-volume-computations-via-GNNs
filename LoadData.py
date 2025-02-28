@@ -22,6 +22,8 @@ class LoadData():
         x = np.load(self.base_path + folder_name + self.file_name + "_x.npy", allow_pickle=True)
         y = np.load(self.base_path + folder_name + self.file_name+ "_y.npy", allow_pickle=True)
         
+        #x[:,:,-1] = x[:,:,-1]*-1 #b should be negative
+        
         x = x[:n_samples]
         y = y[:n_samples]
         #x = x[:1000]
@@ -59,7 +61,7 @@ class LoadData():
         return self.x_train[0].shape
 
 
-    def get_dataloaders(self, dev_split_size=0.2, test_split_size=0.2, train_batch_size=16, eval_batch_size=32):
+    def get_dataloaders(self, dev_split_size=0.2, test_split_size=0.2, train_batch_size=16, eval_batch_size=32, normalize=False):
         
         if self.y_test.size == 0:
             first_cut = dev_split_size+test_split_size
@@ -73,19 +75,12 @@ class LoadData():
             y_test = self.y_test
         
         
-        """
-        scalers = {}
-        for i in range(x_train.shape[1]):
-            scalers[i] = StandardScaler()
-            x_train[:, i, :] = scalers[i].fit_transform(x_train[:, i, :]) 
-
-        for i in range(x_dev.shape[1]):
-            x_dev[:, i, :] = scalers[i].transform(x_dev[:, i, :])
-
-        for i in range(x_test.shape[1]):
-            x_test[:, i, :] = scalers[i].transform(x_test[:, i, :]) 
-        """
-
+        if normalize:
+            scaler = StandardScaler()
+            x_train = scaler.fit_transform(x_train.reshape(-1, x_train.shape[-1])).reshape(x_train.shape)
+            x_dev = scaler.transform(x_dev.reshape(-1, x_dev.shape[-1])).reshape(x_dev.shape)
+            x_test = scaler.transform(x_test.reshape(-1, x_test.shape[-1])).reshape(x_test.shape)
+        
         
         du_train = du.DataUnit(x_train, y_train)
         du_dev = du.DataUnit(x_dev, y_dev)

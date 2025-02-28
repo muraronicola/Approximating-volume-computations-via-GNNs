@@ -18,13 +18,14 @@ class LoadData():
 
 
 
-    def add_dataset(self, folder_name, train_data=True): #I can train on r3 and test on r4. Right now i can't train on r4 and r3
+    def add_dataset(self, folder_name, train_data=True, n_samples=1000000): #I can train on r3 and test on r4. Right now i can't train on r4 and r3
         x = np.load(self.base_path + folder_name + self.file_name + "_x.npy", allow_pickle=True)
         y = np.load(self.base_path + folder_name + self.file_name+ "_y.npy", allow_pickle=True)
         
-        
-        x = x[:1000]
-        y = y[:1000]
+        x = x[:n_samples]
+        y = y[:n_samples]
+        #x = x[:1000]
+        #y = y[:1000]
         
         """x = x[:10]
         y = y[:10]

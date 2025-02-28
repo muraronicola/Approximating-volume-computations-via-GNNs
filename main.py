@@ -83,14 +83,14 @@ def evaluate(model, eval_loader, device="cpu"):
 
 
 def main():
+    file_name = "run03"
+    
     parser = argparse.ArgumentParser()
-
     parser.add_argument(
         "-path_configuration", type=str, default="./configurations/default.json", help="specify the path to the configuration file"
     )
 
     args = parser.parse_args()
-
     path_configuration = args.path_configuration
     configuration = conf.get_configuration(path_configuration)
 
@@ -98,10 +98,11 @@ def main():
 
     conf_data = configuration["data"]
     load_data = LoadData(base_path=conf_data["base_path"], exact_polytopes=conf_data["exact_polytopes"])
-    load_data.add_dataset(conf_data["train-test-data"][0], train_data=True)
+    load_data.add_dataset(conf_data["train-test-data"][0], train_data=True, n_samples=conf_data["samples"])
     #load_data.add_dataset(conf_data["train-test-data"][1], train_data=False)
     
     node_features = load_data.get_node_features()[1]
+    
     
     conf_train = configuration["train"]
     train_loader, dev_loader, test_loader = load_data.get_dataloaders(test_split_size=conf_data["train-test-split"], dev_split_size=conf_data["train-eval-split"], train_batch_size=conf_train["train_batch_size"], eval_batch_size=conf_train["eval_batch_size"])
@@ -114,6 +115,13 @@ def main():
         print("+++++")"""
         
     
+    #Save txt file with configuration
+    file_config = open("./runs/" + file_name + ".txt", "w")
+    #It's a json i want a new line for each key
+    json_str = str(configuration).replace(", ", ",\n").replace("{", "{\n").replace("}", "\n}")
+    file_config.write(json_str)
+    file_config.close()
+    
     model = GCN(node_features=node_features, hidden_channels=256).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
     #optimizer = torch.optim.SGD(model.parameters(), lr=0.000005)
@@ -121,7 +129,7 @@ def main():
 
     results = pd.DataFrame(columns=["epoch", "train_loss", "train_mse", "test_mse", "dev_mse", "acc_train", "acc_test", "acc_dev", "mean_pred_train", "mean_pred_dev", "mean_pred_test", "std_pred_train", "std_pred_dev", "std_pred_test"])
     
-    iterator = tqdm(range(1, 10000))
+    iterator = tqdm(range(1, conf_train["train_epochs"]+1))
     for epoch in iterator:
         loss = train(model, train_loader, optimizer, criterion, device=device)
         
@@ -134,7 +142,7 @@ def main():
         
         iterator.set_description(f'Train mean loss: { np.mean(loss):.4f}')
 
-    results.to_csv("./runs/run01.csv")
+    results.to_csv("./runs/" + file_name + ".csv")
     
     
     figure, ax = plt.subplots(2, 3, figsize=(18, 8))
@@ -146,7 +154,7 @@ def main():
     sns.lineplot(data=results, x="epoch", y="acc_test", ax=ax[1, 2])
     
     figure.tight_layout()
-    figure.savefig("./runs/run01.png")
+    figure.savefig("./runs/" + file_name + ".png")
 
 if __name__ == "__main__":
     main()

@@ -121,7 +121,7 @@ def main():
 
     results = pd.DataFrame(columns=["epoch", "train_loss", "train_mse", "test_mse", "dev_mse", "acc_train", "acc_test", "acc_dev", "mean_pred_train", "mean_pred_dev", "mean_pred_test", "std_pred_train", "std_pred_dev", "std_pred_test"])
     
-    iterator = tqdm(range(1, 500))
+    iterator = tqdm(range(1, 10000))
     for epoch in iterator:
         loss = train(model, train_loader, optimizer, criterion, device=device)
         

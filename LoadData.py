@@ -23,8 +23,8 @@ class LoadData():
         y = np.load(self.base_path + folder_name + self.file_name+ "_y.npy", allow_pickle=True)
         
         
-        x = x[:100]
-        y = y[:100]
+        x = x[:1000]
+        y = y[:1000]
         
         """x = x[:10]
         y = y[:10]

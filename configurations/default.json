@@ -1,7 +1,7 @@
 {
     "device": "cuda:0",
     "data": {
-        "samples": 10000,
+        "samples": 100000,
         "base_path": "./data/",
         "exact_polytopes": true,
         "train-test-separation" : false,
@@ -14,9 +14,9 @@
         "conversion": "constraints"
     },
     "train":{
-        "train_batch_size": 1024,
-        "eval_batch_size": 2048,
-        "train_epochs": 1000,
+        "train_batch_size": 2048,
+        "eval_batch_size": 4096,
+        "train_epochs": 5000,
         "early_stopping": 200,
         "learning_rate": 0.00001,
         "loss": "l1"

@@ -141,7 +141,7 @@ def main():
     file_config.close()
     
     model = GCN(node_features=node_features, hidden_channels=256).to(device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
+    optimizer = torch.optim.Adam(model.parameters(), lr=conf_train["learning_rate"])
     #optimizer = torch.optim.SGD(model.parameters(), lr=0.000005)
     criterion = torch.nn.MSELoss()
 

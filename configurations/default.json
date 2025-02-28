@@ -15,6 +15,7 @@
         "train_batch_size": 4098,
         "eval_batch_size": 8192,
         "train_epochs": 2000,
-        "early_stopping": 200
+        "early_stopping": 200,
+        "learning_rate": 0.00001
     }
 }

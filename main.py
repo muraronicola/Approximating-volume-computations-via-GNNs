@@ -9,6 +9,7 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+import os
 
 def r2_accuracy(pred_y, y):
     score = r2_score(y, pred_y)
@@ -25,6 +26,15 @@ def calculate_se_over_batch(out, y):
         #print("+++++")
     
     return se_global
+
+def calculate_error_over_batch(out, y):
+    error_global = 0
+    
+    for i in range(len(out)):
+        error = abs(out[i].item() - y[i])
+        error_global += error
+    
+    return error_global
 
 
 def train(model, train_loader, optimizer, criterion, device="cpu"):
@@ -51,9 +61,9 @@ def evaluate(model, eval_loader, device="cpu"):
 
     with torch.no_grad():    
         se = []
+        error = []
         pred_mean = 0
         pred_std = 0
-        acc = 0
         for data in eval_loader:
             data.to(device)
             out = model(data.x, data.edge_index, data.batch, train=False)
@@ -64,26 +74,34 @@ def evaluate(model, eval_loader, device="cpu"):
             #print("out: ", flatten_out.detach().cpu().numpy())
             #print("data: ", data.y.detach().cpu().numpy())
             
-            this_acc = r2_accuracy(out.detach().cpu().numpy(), data.y.detach().cpu().numpy())
+            this_error = calculate_error_over_batch(out.detach().cpu().numpy(), data.y.detach().cpu().numpy())
+            error.append(this_error)
             #print(out[0], data.y[0], this_mse)
-            acc += this_acc
             pred_mean += np.mean(np.array(out.detach().cpu().numpy()))
             pred_std += np.std(np.array(out.detach().cpu().numpy()))
             
             
     
     mse = sum(se) / len(eval_loader.dataset)
-    acc = acc / len(eval_loader.dataset)
+    mean_error = sum(error) / len(eval_loader.dataset)
     
     pred_mean = pred_mean / len(eval_loader.dataset)
     pred_std = pred_std / len(eval_loader.dataset)
     
-    return mse, acc, pred_mean, pred_std
+    return mse, mean_error, pred_mean, pred_std
     
 
+def find_filename():
+    i = 1
+    while True:
+        file_name = "run" + str(i)
+        if not os.path.exists("./runs/" + file_name + ".csv"):
+            return file_name
+        i += 1
 
 def main():
-    file_name = "run03"
+    file_name = find_filename()
+    print("Saving results in: ", file_name)
     
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -127,17 +145,26 @@ def main():
     #optimizer = torch.optim.SGD(model.parameters(), lr=0.000005)
     criterion = torch.nn.MSELoss()
 
-    results = pd.DataFrame(columns=["epoch", "train_loss", "train_mse", "test_mse", "dev_mse", "acc_train", "acc_test", "acc_dev", "mean_pred_train", "mean_pred_dev", "mean_pred_test", "std_pred_train", "std_pred_dev", "std_pred_test"])
+    results = pd.DataFrame(columns=["epoch", "train_loss", "train_mse", "test_mse", "dev_mse", "mean_error_train", "mean_error_dev", "mean_error_test", "mean_pred_train", "mean_pred_dev", "mean_pred_test", "std_pred_train", "std_pred_dev", "std_pred_test"])
     
     iterator = tqdm(range(1, conf_train["train_epochs"]+1))
+    best_eval_mse = 100000000
+    best_epoch_mse = 0
     for epoch in iterator:
         loss = train(model, train_loader, optimizer, criterion, device=device)
         
-        train_mse, acc_train, mean_pred_train, std_pred_train = evaluate(model, train_loader, device=device)
-        test_mse, acc_test, mean_pred_dev, std_pred_dev = evaluate(model, test_loader, device=device)
-        dev_mse, acc_dev, mean_pred_test, std_pred_test = evaluate(model, dev_loader, device=device)
+        train_mse, mean_error_train, mean_pred_train, std_pred_train = evaluate(model, train_loader, device=device)
+        dev_mse, mean_error_dev, mean_pred_dev, std_pred_dev = evaluate(model, dev_loader, device=device)
+        test_mse, mean_error_test, mean_pred_test, std_pred_test = evaluate(model, test_loader, device=device)
         
-        new_data = pd.DataFrame([[epoch, np.mean(loss), train_mse, test_mse, dev_mse, acc_train, acc_test, acc_dev, mean_pred_train, mean_pred_dev, mean_pred_test, std_pred_train, std_pred_dev, std_pred_test]], columns=["epoch", "train_loss", "train_mse", "test_mse", "dev_mse", "acc_train", "acc_test", "acc_dev", "mean_pred_train", "mean_pred_dev", "mean_pred_test", "std_pred_train", "std_pred_dev", "std_pred_test"])
+        if dev_mse < best_eval_mse:
+            best_eval_mse = dev_mse
+            best_epoch_mse = epoch
+        
+        if epoch - best_epoch_mse > conf_train["early_stopping"]:
+            break
+        
+        new_data = pd.DataFrame([[epoch, np.mean(loss), train_mse, test_mse, dev_mse, mean_error_train, mean_error_dev, mean_error_test, mean_pred_train, mean_pred_dev, mean_pred_test, std_pred_train, std_pred_dev, std_pred_test]], columns=["epoch", "train_loss", "train_mse", "test_mse", "dev_mse", "mean_error_train", "mean_error_dev", "mean_error_test", "mean_pred_train", "mean_pred_dev", "mean_pred_test", "std_pred_train", "std_pred_dev", "std_pred_test"])
         results = pd.concat([results, new_data])
         
         iterator.set_description(f'Train mean loss: { np.mean(loss):.4f}')
@@ -145,16 +172,34 @@ def main():
     results.to_csv("./runs/" + file_name + ".csv")
     
     
-    figure, ax = plt.subplots(2, 3, figsize=(18, 8))
-    sns.lineplot(data=results, x="epoch", y="train_mse", ax=ax[0, 0])
-    sns.lineplot(data=results, x="epoch", y="dev_mse", ax=ax[0, 1])
-    sns.lineplot(data=results, x="epoch", y="test_mse", ax=ax[0, 2])
-    sns.lineplot(data=results, x="epoch", y="acc_train", ax=ax[1, 0])
-    sns.lineplot(data=results, x="epoch", y="acc_dev", ax=ax[1, 1])
-    sns.lineplot(data=results, x="epoch", y="acc_test", ax=ax[1, 2])
-    
-    figure.tight_layout()
-    figure.savefig("./runs/" + file_name + ".png")
+    figure2, ax2 = plt.subplots(5, 3, figsize=(18, 20))
+
+    sns.lineplot(data=results, x="epoch", y="train_mse", ax=ax2[0, 0])
+    sns.lineplot(data=results, x="epoch", y="dev_mse", ax=ax2[0, 1])
+    sns.lineplot(data=results, x="epoch", y="test_mse", ax=ax2[0, 2])
+
+    sns.lineplot(data=results, x="epoch", y="train_mse", ax=ax2[1, 0])
+    sns.lineplot(data=results, x="epoch", y="dev_mse", ax=ax2[1, 1])
+    sns.lineplot(data=results, x="epoch", y="test_mse", ax=ax2[1, 2])
+    ax2[1, 0].set_yscale('log')
+    ax2[1, 1].set_yscale('log')
+    ax2[1, 2].set_yscale('log')
+
+
+    sns.lineplot(data=results, x="epoch", y="mean_error_train", ax=ax2[2, 0])
+    sns.lineplot(data=results, x="epoch", y="mean_error_dev", ax=ax2[2, 1])
+    sns.lineplot(data=results, x="epoch", y="mean_error_test", ax=ax2[2, 2])
+
+    sns.lineplot(data=results, x="epoch", y="mean_pred_train", ax=ax2[3, 0])
+    sns.lineplot(data=results, x="epoch", y="mean_pred_dev", ax=ax2[3, 1])
+    sns.lineplot(data=results, x="epoch", y="mean_pred_test", ax=ax2[3, 2])
+
+    sns.lineplot(data=results, x="epoch", y="std_pred_train", ax=ax2[4, 0])
+    sns.lineplot(data=results, x="epoch", y="std_pred_dev", ax=ax2[4, 1])
+    sns.lineplot(data=results, x="epoch", y="std_pred_test", ax=ax2[4, 2])
+
+    figure2.tight_layout()
+    figure2.savefig("./runs/" + file_name + ".png")
 
 if __name__ == "__main__":
     main()

@@ -1,7 +1,7 @@
 {
     "device": "cuda:0",
     "data": {
-        "samples": 100000,
+        "samples": 1000000,
         "base_path": "./data/",
         "exact_polytopes": true,
         "train-test-separation" : false,
@@ -14,6 +14,7 @@
     "train":{
         "train_batch_size": 4098,
         "eval_batch_size": 8192,
-        "train_epochs": 2000
+        "train_epochs": 2000,
+        "early_stopping": 200
     }
 }

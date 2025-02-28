@@ -136,13 +136,19 @@ def main():
     model = GCN(node_features=node_features, hidden_channels=256).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=conf_train["learning_rate"])
     #optimizer = torch.optim.SGD(model.parameters(), lr=0.000005)
-    criterion = torch.nn.MSELoss()
+    
+    if conf_train["loss"] == "mse":
+        criterion = torch.nn.MSELoss()
+    elif conf_train["loss"] == "l1":
+        criterion = torch.nn.L1Loss()
+    else:
+        raise ValueError("Loss not supported")
 
     results = pd.DataFrame(columns=["epoch", "train_loss", "train_mse", "test_mse", "dev_mse", "mean_error_train", "mean_error_dev", "mean_error_test", "mean_pred_train", "mean_pred_dev", "mean_pred_test", "std_pred_train", "std_pred_dev", "std_pred_test"])
     
     iterator = tqdm(range(1, conf_train["train_epochs"]+1))
-    best_eval_mse = 100000000
-    best_epoch_mse = 0
+    best_eval = 100000000
+    best_epoch_eval = 0
     for epoch in iterator:
         loss = train(model, train_loader, optimizer, criterion, device=device)
         
@@ -150,11 +156,17 @@ def main():
         dev_mse, mean_error_dev, mean_pred_dev, std_pred_dev = evaluate(model, dev_loader, device=device)
         test_mse, mean_error_test, mean_pred_test, std_pred_test = evaluate(model, test_loader, device=device)
         
-        if dev_mse < best_eval_mse:
-            best_eval_mse = dev_mse
-            best_epoch_mse = epoch
         
-        if epoch - best_epoch_mse > conf_train["early_stopping"]:
+        if conf_train["loss"] == "mse":
+            if dev_mse < best_eval:
+                best_eval = dev_mse
+                best_epoch_eval = epoch
+        else:
+            if mean_error_dev < best_eval:
+                best_eval = mean_error_dev
+                best_epoch_eval = epoch
+        
+        if epoch - best_epoch_eval > conf_train["early_stopping"]:
             break
         
         new_data = pd.DataFrame([[epoch, np.mean(loss), train_mse, test_mse, dev_mse, mean_error_train, mean_error_dev, mean_error_test, mean_pred_train, mean_pred_dev, mean_pred_test, std_pred_train, std_pred_dev, std_pred_test]], columns=["epoch", "train_loss", "train_mse", "test_mse", "dev_mse", "mean_error_train", "mean_error_dev", "mean_error_test", "mean_pred_train", "mean_pred_dev", "mean_pred_test", "std_pred_train", "std_pred_dev", "std_pred_test"])

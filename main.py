@@ -4,7 +4,11 @@ import configurations.configurations as conf
 import argparse
 from model import GCN
 from sklearn.metrics import r2_score
-
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 def r2_accuracy(pred_y, y):
     score = r2_score(y, pred_y)
@@ -26,17 +30,20 @@ def calculate_se_over_batch(out, y):
 def train(model, train_loader, optimizer, criterion, device="cpu"):
     model.train()
 
+    loss_array = []
     for data in train_loader: 
         data.to(device)
         out = model(data.x, data.edge_index, data.batch) 
         loss = criterion(out, data.y) 
+        loss_array.append(loss.item())
         
         loss.backward()
         optimizer.step()
         optimizer.zero_grad()
     
-    print("Loss: ", loss.item())
+    #print("Loss: ", loss.item())
     #print("out: ", out.detach().cpu().numpy()[0])
+    return loss_array
 
 
 def evaluate(model, eval_loader, device="cpu"):
@@ -44,6 +51,8 @@ def evaluate(model, eval_loader, device="cpu"):
 
     with torch.no_grad():    
         se = []
+        pred_mean = 0
+        pred_std = 0
         acc = 0
         for data in eval_loader:
             data.to(device)
@@ -58,11 +67,18 @@ def evaluate(model, eval_loader, device="cpu"):
             this_acc = r2_accuracy(out.detach().cpu().numpy(), data.y.detach().cpu().numpy())
             #print(out[0], data.y[0], this_mse)
             acc += this_acc
+            pred_mean += np.mean(np.array(out.detach().cpu().numpy()))
+            pred_std += np.std(np.array(out.detach().cpu().numpy()))
+            
             
     
     mse = sum(se) / len(eval_loader.dataset)
     acc = acc / len(eval_loader.dataset)
-    return mse, acc
+    
+    pred_mean = pred_mean / len(eval_loader.dataset)
+    pred_std = pred_std / len(eval_loader.dataset)
+    
+    return mse, acc, pred_mean, pred_std
     
 
 
@@ -82,7 +98,7 @@ def main():
 
     conf_data = configuration["data"]
     load_data = LoadData(base_path=conf_data["base_path"], exact_polytopes=conf_data["exact_polytopes"])
-    load_data.add_dataset(conf_data["train-test-data"][1], train_data=True)
+    load_data.add_dataset(conf_data["train-test-data"][0], train_data=True)
     #load_data.add_dataset(conf_data["train-test-data"][1], train_data=False)
     
     node_features = load_data.get_node_features()[1]
@@ -99,20 +115,38 @@ def main():
         
     
     model = GCN(node_features=node_features, hidden_channels=256).to(device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.00001)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
     #optimizer = torch.optim.SGD(model.parameters(), lr=0.000005)
     criterion = torch.nn.MSELoss()
 
-    for epoch in range(1, 1000000):
-        train(model, train_loader, optimizer, criterion, device=device)
+    results = pd.DataFrame(columns=["epoch", "train_loss", "train_mse", "test_mse", "dev_mse", "acc_train", "acc_test", "acc_dev", "mean_pred_train", "mean_pred_dev", "mean_pred_test", "std_pred_train", "std_pred_dev", "std_pred_test"])
+    
+    iterator = tqdm(range(1, 500))
+    for epoch in iterator:
+        loss = train(model, train_loader, optimizer, criterion, device=device)
         
-        train_mse, acc_train = evaluate(model, train_loader, device=device)
-        test_mse, acc_test = evaluate(model, test_loader, device=device)
-        dev_mse, acc_dev = evaluate(model, dev_loader, device=device)
+        train_mse, acc_train, mean_pred_train, std_pred_train = evaluate(model, train_loader, device=device)
+        test_mse, acc_test, mean_pred_dev, std_pred_dev = evaluate(model, test_loader, device=device)
+        dev_mse, acc_dev, mean_pred_test, std_pred_test = evaluate(model, dev_loader, device=device)
         
-        #print(f'Epoch: {epoch:03d}, Train MSE: {train_mse:.4f}, Dev MSE: {dev_mse:.4f}, Test MSE: {test_mse:.4f}')
-        #print(f'Epoch: {epoch:03d}, Train acc: {acc_train:.4f}, Dev acc: {acc_dev:.4f}, Test acc: {acc_test:.4f}')
+        new_data = pd.DataFrame([[epoch, np.mean(loss), train_mse, test_mse, dev_mse, acc_train, acc_test, acc_dev, mean_pred_train, mean_pred_dev, mean_pred_test, std_pred_train, std_pred_dev, std_pred_test]], columns=["epoch", "train_loss", "train_mse", "test_mse", "dev_mse", "acc_train", "acc_test", "acc_dev", "mean_pred_train", "mean_pred_dev", "mean_pred_test", "std_pred_train", "std_pred_dev", "std_pred_test"])
+        results = pd.concat([results, new_data])
+        
+        iterator.set_description(f'Train mean loss: { np.mean(loss):.4f}')
 
+    results.to_csv("./runs/run01.csv")
+    
+    
+    figure, ax = plt.subplots(2, 3, figsize=(18, 8))
+    sns.lineplot(data=results, x="epoch", y="train_mse", ax=ax[0, 0])
+    sns.lineplot(data=results, x="epoch", y="dev_mse", ax=ax[0, 1])
+    sns.lineplot(data=results, x="epoch", y="test_mse", ax=ax[0, 2])
+    sns.lineplot(data=results, x="epoch", y="acc_train", ax=ax[1, 0])
+    sns.lineplot(data=results, x="epoch", y="acc_dev", ax=ax[1, 1])
+    sns.lineplot(data=results, x="epoch", y="acc_test", ax=ax[1, 2])
+    
+    figure.tight_layout()
+    figure.savefig("./runs/run01.png")
 
 if __name__ == "__main__":
     main()

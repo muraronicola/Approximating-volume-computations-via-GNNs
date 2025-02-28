@@ -61,7 +61,7 @@ class LoadData():
         return self.x_train[0].shape
 
 
-    def get_dataloaders(self, dev_split_size=0.2, test_split_size=0.2, train_batch_size=16, eval_batch_size=32, normalize=False):
+    def get_dataloaders(self, dev_split_size=0.2, test_split_size=0.2, train_batch_size=16, eval_batch_size=32, normalize=False, conversions="constraints"):
         
         if self.y_test.size == 0:
             first_cut = dev_split_size+test_split_size
@@ -82,9 +82,9 @@ class LoadData():
             x_test = scaler.transform(x_test.reshape(-1, x_test.shape[-1])).reshape(x_test.shape)
         
         
-        du_train = du.DataUnit(x_train, y_train)
-        du_dev = du.DataUnit(x_dev, y_dev)
-        du_test = du.DataUnit(x_test, y_test)
+        du_train = du.DataUnit(x_train, y_train, conversion=conversions)
+        du_dev = du.DataUnit(x_dev, y_dev, conversion=conversions)
+        du_test = du.DataUnit(x_test, y_test, conversion=conversions)
         
         train_loader = DataLoader(du_train, batch_size=train_batch_size, shuffle=False)
         dev_loader = DataLoader(du_dev, batch_size=train_batch_size, shuffle=False)

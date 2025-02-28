@@ -5,12 +5,22 @@ from torch.utils.data import Dataset
 from torch_geometric.data import Data
 
 class DataUnit(Dataset):
-    def __init__(self, x, y):
+    def __init__(self, x, y, conversion="constraints"):
 
+        if conversion != "constraints" and conversion != "dimensions":
+            raise ValueError("Invalid conversion type")
+        
+        self.data = self.convert_data(x, y, conversion)
+        
+        
+    def convert_data(self, x, y, conversion): #Second try
         converted_data = []
         for index in range(len(x)):
             this_x = x[index]
             this_y = y[index]
+            
+            if conversion == "dimensions":
+                this_x = this_x.transpose()
             
             edge_index = []
             for i in range(this_x.shape[0]):
@@ -23,8 +33,8 @@ class DataUnit(Dataset):
             torch_y = torch.tensor(this_y, dtype=torch.float)
             #torch_y = torch.tensor(100, dtype=torch.float)
             converted_data.append(Data(x=torch_x, edge_index=edge_index, y=torch_y))
-        
-        self.data = converted_data
+
+        return converted_data
 
     def __len__(self):
         return len(self.data)

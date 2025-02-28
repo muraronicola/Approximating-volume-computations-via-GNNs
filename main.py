@@ -15,26 +15,26 @@ def r2_accuracy(pred_y, y):
     score = r2_score(y, pred_y)
     return round(score, 2)*100
 
-def calculate_se_over_batch(out, y):
+def calculate_se(out, y):
     se_global = 0
     
     for i in range(len(out)):
-        se = (out[i].item() - y[i])**2
+        se = (out[i] - y[i])**2
         se_global += se
         
         #print(out[i], y[i], mse)
         #print("+++++")
     
-    return se_global
+    return se_global / len(out)
 
-def calculate_error_over_batch(out, y):
+def calculate_error(out, y):
     error_global = 0
     
     for i in range(len(out)):
-        error = abs(out[i].item() - y[i])
+        error = abs(out[i] - y[i])
         error_global += error
     
-    return error_global
+    return error_global / len(out)
 
 
 def train(model, train_loader, optimizer, criterion, device="cpu"):
@@ -60,33 +60,26 @@ def evaluate(model, eval_loader, device="cpu"):
     model.eval()
 
     with torch.no_grad():    
-        se = []
-        error = []
         pred_mean = 0
-        pred_std = 0
+        array_pred = np.empty(0)
+        array_y = np.empty(0)
         for data in eval_loader:
             data.to(device)
             out = model(data.x, data.edge_index, data.batch, train=False)
-            this_se = calculate_se_over_batch(out.detach().cpu().numpy(), data.y.detach().cpu().numpy())
-            se.append(this_se)
-            
             #print("out: ", flatten_out)
             #print("out: ", flatten_out.detach().cpu().numpy())
             #print("data: ", data.y.detach().cpu().numpy())
             
-            this_error = calculate_error_over_batch(out.detach().cpu().numpy(), data.y.detach().cpu().numpy())
-            error.append(this_error)
             #print(out[0], data.y[0], this_mse)
-            pred_mean += np.mean(np.array(out.detach().cpu().numpy()))
-            pred_std += np.std(np.array(out.detach().cpu().numpy()))
-            
-            
+            #pred_sum += np.sum(np.array(out.detach().cpu().numpy()))
+            array_pred = np.concatenate((array_pred, out.detach().cpu().numpy().flatten()), axis=None)
+            array_y = np.concatenate((array_y, data.y.detach().cpu().numpy().flatten()), axis=None)
     
-    mse = sum(se) / len(eval_loader.dataset)
-    mean_error = sum(error) / len(eval_loader.dataset)
+    mse = calculate_se(array_pred, array_y)
+    mean_error = calculate_error(array_pred, array_y)
     
-    pred_mean = pred_mean / len(eval_loader.dataset)
-    pred_std = pred_std / len(eval_loader.dataset)
+    pred_mean = np.mean(array_pred)
+    pred_std = np.std(array_pred)
     
     return mse, mean_error, pred_mean, pred_std
     
@@ -123,7 +116,7 @@ def main():
     
     
     conf_train = configuration["train"]
-    train_loader, dev_loader, test_loader = load_data.get_dataloaders(test_split_size=conf_data["train-test-split"], dev_split_size=conf_data["train-eval-split"], train_batch_size=conf_train["train_batch_size"], eval_batch_size=conf_train["eval_batch_size"], normalize=conf_data["normalize"])
+    train_loader, dev_loader, test_loader = load_data.get_dataloaders(test_split_size=conf_data["train-test-split"], dev_split_size=conf_data["train-eval-split"], train_batch_size=conf_train["train_batch_size"], eval_batch_size=conf_train["eval_batch_size"], normalize=conf_data["normalize"], conversions=conf_data["conversion"])
     
     """print(train_loader)
     print("----------------")

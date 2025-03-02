@@ -1,7 +1,7 @@
 {
 'device': 'cuda:0',
 'data': {
-'samples': 1000,
+'samples': 100000,
 'base_path': './data/',
 'exact_polytopes': True,
 'train-test-separation': False,
@@ -21,7 +21,7 @@
 'train_epochs': 5000,
 'early_stopping': 200,
 'learning_rate': 0.0005,
-'loss': 'l1',
+'loss': 'mse',
 'dropout': 0.1,
 'hidden_channels': 16
 }

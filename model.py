@@ -19,6 +19,10 @@ class GCN(torch.nn.Module):
         self.conv7 = GraphConv(hidden_channels, hidden_channels)
         
         self.dropout = Dropout(p=p_drop)
+        
+        self.linear1 = Linear(hidden_channels, hidden_channels)
+        self.linear2 = Linear(hidden_channels, hidden_channels)
+        self.linear3 = Linear(hidden_channels, hidden_channels)
         self.out = Linear(hidden_channels, 1)
         
         torch.nn.init.uniform_(self.out.weight) 
@@ -33,7 +37,7 @@ class GCN(torch.nn.Module):
         x = self.conv1(x, edge_index)
         x = x.relu()
         x = self.conv2(x, edge_index)
-        """x = x.relu()
+        x = x.relu()
         x = self.conv3(x, edge_index)
         x = x.relu()
         x = self.conv4(x, edge_index)
@@ -42,12 +46,19 @@ class GCN(torch.nn.Module):
         x = x.relu()
         x = self.conv6(x, edge_index)
         x = x.relu()
-        x = self.conv7(x, edge_index)"""
+        x = self.conv7(x, edge_index)
 
         x = global_mean_pool(x, batch)  # [batch_size, hidden_channels]
 
         if train:
             x = self.dropout(x)
+        
+        x = self.linear1(x)
+        x = x.relu()
+        x = self.linear2(x)
+        x = x.relu()
+        x = self.linear3(x)
+        x = x.relu()
         
         x = self.out(x)
         x = torch.flatten(x)

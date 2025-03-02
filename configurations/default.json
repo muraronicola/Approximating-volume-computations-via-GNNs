@@ -10,15 +10,18 @@
         "train-test-data" : ["m_3_r_2", "m_4_r_2"],
         "train-data": null,
         "test-data": null,
-        "normalize": true,
-        "conversion": "constraints"
+        "normalize": false,
+        "conversion": "constraints",
+        "cutoff": 200
     },
     "train":{
         "train_batch_size": 2048,
         "eval_batch_size": 4096,
         "train_epochs": 5000,
         "early_stopping": 200,
-        "learning_rate": 0.00001,
-        "loss": "l1"
+        "learning_rate": 0.0005,
+        "loss": "mse",
+        "dropout": 0.1,
+        "hidden_channels": 16
     }
 }

@@ -1,3 +1,5 @@
 # Salvare il modello
 # "confusion matrix" ( al variare di true_y, cosa predice il modello (pred_y))
 # analisi dei dati in input, posso raggrupparli di 10 in 10 e vedere la distribuzione
+
+# creo i dati (di y) come fossero una distribuzione uniforme

@@ -18,11 +18,17 @@ class LoadData():
 
 
 
-    def add_dataset(self, folder_name, train_data=True, n_samples=1000000): #I can train on r3 and test on r4. Right now i can't train on r4 and r3
+    def add_dataset(self, folder_name, train_data=True, n_samples=1000000, cutoff=-1): #I can train on r3 and test on r4. Right now i can't train on r4 and r3
         x = np.load(self.base_path + folder_name + self.file_name + "_x.npy", allow_pickle=True)
         y = np.load(self.base_path + folder_name + self.file_name+ "_y.npy", allow_pickle=True)
         
         #x[:,:,-1] = x[:,:,-1]*-1 #b should be negative
+        
+        if cutoff > 0:
+            #remove all the samples that have a value higher than the cutoff
+            mask = y < cutoff
+            x = x[mask]
+            y = y[mask]
         
         x = x[:n_samples]
         y = y[:n_samples]
@@ -67,10 +73,10 @@ class LoadData():
             first_cut = dev_split_size+test_split_size
             second_cut = dev_split_size/first_cut
 
-            x_train, x_test, y_train, y_test = train_test_split(self.x_train, self.y_train, test_size=first_cut, random_state=0, shuffle=False)
+            x_train, x_test, y_train, y_test = train_test_split(self.x_train, self.y_train, test_size=first_cut, random_state=0, shuffle=True)
             x_test, x_dev, y_test, y_dev = train_test_split(x_test, y_test, test_size=second_cut, random_state=0)
         else:
-            x_train, x_dev, y_train, y_dev = train_test_split(self.x_train, self.y_train, test_size=dev_split_size, random_state=0, shuffle=False)
+            x_train, x_dev, y_train, y_dev = train_test_split(self.x_train, self.y_train, test_size=dev_split_size, random_state=0, shuffle=True)
             x_test = self.x_test
             y_test = self.y_test
         

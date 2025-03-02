@@ -81,7 +81,7 @@ def evaluate(model, eval_loader, device="cpu"):
     pred_mean = np.mean(array_pred)
     pred_std = np.std(array_pred)
     
-    return mse, mean_error, pred_mean, pred_std
+    return mse, mean_error, pred_mean, pred_std, array_y, array_pred
     
 
 def find_filename():
@@ -109,7 +109,7 @@ def main():
 
     conf_data = configuration["data"]
     load_data = LoadData(base_path=conf_data["base_path"], exact_polytopes=conf_data["exact_polytopes"])
-    load_data.add_dataset(conf_data["train-test-data"][0], train_data=True, n_samples=conf_data["samples"])
+    load_data.add_dataset(conf_data["train-test-data"][0], train_data=True, n_samples=conf_data["samples"], cutoff=conf_data["cutoff"])
     #load_data.add_dataset(conf_data["train-test-data"][1], train_data=False)
     
     node_features = load_data.get_node_features()[1]
@@ -133,7 +133,7 @@ def main():
     file_config.write(json_str)
     file_config.close()
     
-    model = GCN(node_features=node_features, hidden_channels=256).to(device)
+    model = GCN(node_features=node_features, hidden_channels=conf_train["hidden_channels"], p_drop=conf_train["dropout"]).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=conf_train["learning_rate"])
     #optimizer = torch.optim.SGD(model.parameters(), lr=0.000005)
     
@@ -152,9 +152,9 @@ def main():
     for epoch in iterator:
         loss = train(model, train_loader, optimizer, criterion, device=device)
         
-        train_mse, mean_error_train, mean_pred_train, std_pred_train = evaluate(model, train_loader, device=device)
-        dev_mse, mean_error_dev, mean_pred_dev, std_pred_dev = evaluate(model, dev_loader, device=device)
-        test_mse, mean_error_test, mean_pred_test, std_pred_test = evaluate(model, test_loader, device=device)
+        train_mse, mean_error_train, mean_pred_train, std_pred_train, _, _ = evaluate(model, train_loader, device=device)
+        dev_mse, mean_error_dev, mean_pred_dev, std_pred_dev, _, _ = evaluate(model, dev_loader, device=device)
+        test_mse, mean_error_test, mean_pred_test, std_pred_test, _, _ = evaluate(model, test_loader, device=device)
         
         
         if conf_train["loss"] == "mse":
@@ -205,7 +205,27 @@ def main():
 
     figure2.tight_layout()
     figure2.savefig("./runs/" + file_name + ".png")
+    
+    
+    
+    _, _, _, _, y, y_pred = evaluate(model, train_loader, device=device)
+    train_predictions = pd.DataFrame(columns=["y", "y_pred"])
+    train_predictions["y"] = y
+    train_predictions["y_pred"] = y_pred
+    train_predictions.to_csv("./runs/" + file_name + "_train_predictions.csv")
+    
+    _, _, _, _, y, y_pred = evaluate(model, dev_loader, device=device)
+    dev_predictions = pd.DataFrame(columns=["y", "y_pred"])
+    dev_predictions["y"] = y
+    dev_predictions["y_pred"] = y_pred
+    dev_predictions.to_csv("./runs/" + file_name + "_dev_predictions.csv")
+    
+    _, _, _, _, y, y_pred = evaluate(model, test_loader, device=device)
+    test_predictions = pd.DataFrame(columns=["y", "y_pred"])
+    test_predictions["y"] = y
+    test_predictions["y_pred"] = y_pred
+    test_predictions.to_csv("./runs/" + file_name + "_test_predictions.csv")
+
 
 if __name__ == "__main__":
     main()
-    

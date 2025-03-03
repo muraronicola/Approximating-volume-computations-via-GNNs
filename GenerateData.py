@@ -7,6 +7,7 @@ from pycvxset import Polytope, Ellipsoid, spread_points_on_a_unit_sphere
 import os
 import argparse
 from tqdm import tqdm
+import math
 
 def is_bounded(A, b):
     n = A.shape[1]
@@ -29,7 +30,7 @@ def generate_polytope(rng, m=4, r=3):
     x0 = np.full(r, 1)
     A = rng.uniform(-10, 10, (m, r))
     b = A @ x0
-    b += rng.uniform(1, 30, m)
+    b += rng.uniform(1, 40, m) #Era 1, 30, m
     
     is_valid = is_bounded(A, b)
     
@@ -51,7 +52,7 @@ def check_exact_polytope(original_volume, A, b, m): #Check if all the constraint
         
     return True
 
-def generate_n_polytopes(n_polytopes, base_path="./data/", seed=0, m=4, r=3, save_images=True, only_exact=False):
+def generate_n_polytopes(n_polytopes, base_path="./data/", seed=0, m=4, r=3, save_images=True, only_exact=False, uniform=True, max_volume=500):
     rng = np.random.default_rng(seed)
 
     path = base_path + "m_" + str(m) + "_r_" + str(r) + "/"
@@ -65,7 +66,15 @@ def generate_n_polytopes(n_polytopes, base_path="./data/", seed=0, m=4, r=3, sav
 
     pbar = tqdm(total=n_polytopes)
     i = 0
+    discretization_step = 5
+    volume_counter = np.zeros(math.floor(max_volume/discretization_step))
+    target_volume = math.floor(n_polytopes/(max_volume/discretization_step))
     while i < n_polytopes:
+        
+        if uniform:
+            if (volume_counter == target_volume).all():
+                break
+        
         is_valid, A, b = generate_polytope(rng, m=m, r=r)
         
         if is_valid:
@@ -83,11 +92,19 @@ def generate_n_polytopes(n_polytopes, base_path="./data/", seed=0, m=4, r=3, sav
                 data_y.append(volume)
             
             if check_exact_polytope(volume, A, b, m):
+                if uniform:
+                    if volume >= max_volume:
+                        continue
+                    
+                    if volume_counter[round(volume/discretization_step) - 1] >= target_volume:
+                        continue
+                
                 if r <= 3 and save_images:
                     plot_polytope(polytope, save=save_images, show=False, filename=path + "politope_" + str(i) + ".png")
                 
                 data_exact_politope_x.append(x)
                 data_exact_politope_y.append(volume)
+                volume_counter[round(volume/discretization_step) - 1] += 1
                 i += 1
                 pbar.update(1)
         
@@ -108,6 +125,8 @@ def generate_n_polytopes(n_polytopes, base_path="./data/", seed=0, m=4, r=3, sav
     np.save(path + "exact_politopes_x.npy", data_exact_politope_x)
     np.save(path + "exact_politopes_y.npy", data_exact_politope_y)
     
+    print(volume_counter)
+    
 
 def load_data(filename):
     data = np.load(filename, allow_pickle=True)
@@ -118,15 +137,19 @@ def main():
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("-r", type=int, default=0, help="specify the path to the configuration file")
-    parser.add_argument("-m", type=int, default=0, help="specify the path to the configuration file")
-    parser.add_argument("-n", type=int, default=100, help="specify the path to the configuration file")
+    parser.add_argument("-r", type=int, default=0, help="number of dimensions")
+    parser.add_argument("-m", type=int, default=0, help="number of constraints")
+    parser.add_argument("-n", type=int, default=100, help="number of polytopes to generate")
+    parser.add_argument("-u", type=bool, default=True, help="uniform distribution?")
+    parser.add_argument("-max_v", type=int, default=500, help="max volume (only for uniform distribution)")
 
     args = parser.parse_args()
 
     r_console = args.r
     m_console = args.m
     n_polytopes_console = args.n
+    uniform = args.u
+    max_volume = args.max_v
 
 
     if r_console != 0 and m_console != 0:
@@ -144,7 +167,7 @@ def main():
         for m in m_array:
             if m > r:
                 print("\nGenerating polytopes with m =", m, "and r =", r)
-                generate_n_polytopes(n_polytopes, base_path="./data/", seed=seed, m=m, r=r, only_exact=True)
+                generate_n_polytopes(n_polytopes, base_path="./data/", seed=seed, m=m, r=r, only_exact=True, uniform=uniform, max_volume=max_volume)
             else:
                 print("m must be greater than r")
 

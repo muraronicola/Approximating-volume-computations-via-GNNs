@@ -12,7 +12,7 @@
         "test-data": null,
         "normalize": false,
         "conversion": "constraints",
-        "cutoff": 200
+        "cutoff": 10000
     },
     "train":{
         "train_batch_size": 2048,
@@ -20,7 +20,7 @@
         "train_epochs": 5000,
         "early_stopping": 200,
         "learning_rate": 0.0005,
-        "loss": "mse",
+        "loss": "l1",
         "dropout": 0.1,
         "hidden_channels": 16
     }

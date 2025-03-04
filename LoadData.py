@@ -93,7 +93,7 @@ class LoadData():
         du_test = du.DataUnit(x_test, y_test, conversion=conversions)
         
         train_loader = DataLoader(du_train, batch_size=train_batch_size, shuffle=False)
-        dev_loader = DataLoader(du_dev, batch_size=train_batch_size, shuffle=False)
+        dev_loader = DataLoader(du_dev, batch_size=eval_batch_size, shuffle=False)
         test_loader = DataLoader(du_test, batch_size=eval_batch_size, shuffle=False)
         
         return train_loader, dev_loader, test_loader

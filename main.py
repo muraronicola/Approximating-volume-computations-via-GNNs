@@ -108,9 +108,9 @@ def main():
     device = configuration["device"]
 
     conf_data = configuration["data"]
-    load_data = LoadData(base_path=conf_data["base_path"], exact_polytopes=conf_data["exact_polytopes"])
+    load_data = LoadData(base_path=conf_data["base_path"], exact_polytopes=conf_data["exact_polytopes"], shape=(conf_data["target_shape"][0], conf_data["target_shape"][1]))
     load_data.add_dataset(conf_data["train-test-data"][0], train_data=True, n_samples=conf_data["samples"], cutoff=conf_data["cutoff"])
-    #load_data.add_dataset(conf_data["train-test-data"][1], train_data=False)
+    load_data.add_dataset(conf_data["train-test-data"][1], train_data=True)
     
     node_features = load_data.get_node_features()[1]
     

@@ -6,22 +6,37 @@ from torch_geometric.loader import DataLoader
 from sklearn.preprocessing import StandardScaler
 
 class LoadData():
-    def __init__(self, base_path="./data/", exact_polytopes=True):
+    def __init__(self, base_path="./data/", exact_polytopes=True, shape=(4,4)):
         self.base_path = base_path
         
         self.file_name = "/exact_politopes" if exact_polytopes else "/all_politopes"
         
-        self.x_train = np.array([])
-        self.y_train = np.array([])
-        self.x_test = np.array([])
-        self.y_test = np.array([])
+        shape = (0, shape[0], shape[1])
+        self.shape = shape
+        
+        self.x_train = np.empty(self.shape)
+        self.y_train = np.empty(0)
+        self.x_test = np.empty(self.shape)
+        self.y_test = np.empty(0)
+        
+        
+    def convert_to_target_shape(self, x):
+        if x.shape[1] < self.shape[1]:
+            extra_column = np.zeros((x.shape[0], self.shape[1] - x.shape[1], x.shape[2]))
+            x = np.concatenate((x, extra_column), axis=1)
 
+        if x.shape[2] < self.shape[2]:
+            extra_column = np.zeros((x.shape[0], x.shape[1], self.shape[2] - x.shape[2]))
+            x = np.concatenate((x, extra_column), axis=2)
+            
+        return x 
 
 
     def add_dataset(self, folder_name, train_data=True, n_samples=1000000, cutoff=-1): #I can train on r3 and test on r4. Right now i can't train on r4 and r3
         x = np.load(self.base_path + folder_name + self.file_name + "_x.npy", allow_pickle=True)
         y = np.load(self.base_path + folder_name + self.file_name+ "_y.npy", allow_pickle=True)
         
+        x = self.convert_to_target_shape(x)
         #x[:,:,-1] = x[:,:,-1]*-1 #b should be negative
         
         if cutoff > 0:
@@ -32,35 +47,20 @@ class LoadData():
         
         x = x[:n_samples]
         y = y[:n_samples]
-        #x = x[:1000]
-        #y = y[:1000]
         
-        """x = x[:10]
-        y = y[:10]
+        print("self.x_train.shape", self.x_train.shape)
+        print("x.shape", x.shape)
         
-        print("x", x)
-        print("y", y)
+        print("self.y_train.shape", self.y_train.shape)
+        print("y.shape", y.shape)
         
-        e1 = [[1, 3, 15],
-            [2, 1, 5],
-            [2, 9, 31]]
-        
-        e2 = [[6, 7, 52],
-            [7, 11, 5],
-            [9, 8, 12]]
-        
-        x = np.array([e1, e2, e1, e2, e1, e2, e1, e2, e1, e2])
-        y = np.array([1, 100, 1, 100, 1, 100, 1, 100, 1, 100])
-        
-        print("x", x)
-        print("y", y)"""
         
         if train_data:
-            self.x_train = x #np.append(self.x_train, x, axis=0)
-            self.y_train = y #np.append(self.y_train, y, axis=0)
+            self.x_train = np.concatenate((self.x_train, x)) 
+            self.y_train = np.concatenate((self.y_train, y))
         else:
-            self.x_test = x #np.append(self.x_test, x, axis=0)
-            self.y_test = y #np.append(self.y_test, y, axis=0)
+            self.x_test = np.concatenate((self.x_test, x))
+            self.y_test = np.concatenate((self.y_test, y))
     
 
     def get_node_features(self):

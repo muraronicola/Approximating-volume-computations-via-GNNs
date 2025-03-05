@@ -1,0 +1,2 @@
+Alldata are [0, 500] with uniform distribution.
+10 000 samples are generated for each graph

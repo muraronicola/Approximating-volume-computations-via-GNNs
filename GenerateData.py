@@ -139,7 +139,7 @@ def main():
 
     parser.add_argument("-r", type=int, default=0, help="number of dimensions")
     parser.add_argument("-m", type=int, default=0, help="number of constraints")
-    parser.add_argument("-n", type=int, default=100, help="number of polytopes to generate")
+    parser.add_argument("-n", type=int, default=10000, help="number of polytopes to generate")
     parser.add_argument("-u", type=bool, default=True, help="uniform distribution?")
     parser.add_argument("-max_v", type=int, default=500, help="max volume (only for uniform distribution)")
 

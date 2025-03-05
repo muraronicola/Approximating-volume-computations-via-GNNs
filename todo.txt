@@ -1,5 +1,15 @@
+Allora, all'inizio cos'ì così (soprattutto male con mse)
+
+poi, ho tolto gli outliers
+Meglio, molto meglio.
+Idea: uso una distribuzione uniforme
+
+
 # Salvare il modello
 # "confusion matrix" ( al variare di true_y, cosa predice il modello (pred_y))
 # analisi dei dati in input, posso raggrupparli di 10 in 10 e vedere la distribuzione
 
 # creo i dati (di y) come fossero una distribuzione uniforme
+
+
+#Now all data gen have values between 0 and 500 (with uniform distribution)

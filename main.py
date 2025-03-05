@@ -109,14 +109,16 @@ def main():
 
     conf_data = configuration["data"]
     load_data = LoadData(base_path=conf_data["base_path"], exact_polytopes=conf_data["exact_polytopes"], shape=(conf_data["target_shape"][0], conf_data["target_shape"][1]))
-    load_data.add_dataset(conf_data["train-test-data"][0], train_data=conf_data["train-test-data-train"][0], n_samples=conf_data["samples"], cutoff=conf_data["cutoff"])
-    load_data.add_dataset(conf_data["train-test-data"][1], train_data=conf_data["train-test-data-train"][1])
+    load_data.add_dataset(conf_data["train-test-data"][0], train_data=conf_data["train-test-data-train"][0], cutoff=conf_data["cutoff"])
+    
+    if len(conf_data["train-test-data"]) == 2:
+        load_data.add_dataset(conf_data["train-test-data"][1], train_data=conf_data["train-test-data-train"][1])
     
     node_features = load_data.get_node_features()[1]
     
     
     conf_train = configuration["train"]
-    train_loader, dev_loader, test_loader = load_data.get_dataloaders(test_split_size=conf_data["train-test-split"], dev_split_size=conf_data["train-eval-split"], train_batch_size=conf_train["train_batch_size"], eval_batch_size=conf_train["eval_batch_size"], normalize=conf_data["normalize"], conversions=conf_data["conversion"])
+    train_loader, dev_loader, test_loader = load_data.get_dataloaders(test_split_size=conf_data["train-test-split"], dev_split_size=conf_data["train-eval-split"], train_batch_size=conf_train["train_batch_size"], eval_batch_size=conf_train["eval_batch_size"], normalize=conf_data["normalize"], conversions=conf_data["conversion"], n_max_samples=conf_data["max_samples"])
     
     
     #Save txt file with configuration

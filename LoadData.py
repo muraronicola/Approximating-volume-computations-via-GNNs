@@ -28,11 +28,11 @@ class LoadData():
         if x.shape[2] < self.shape[2]:
             extra_column = np.zeros((x.shape[0], x.shape[1], self.shape[2] - x.shape[2]))
             x = np.concatenate((x, extra_column), axis=2)
-            
+        
         return x 
 
 
-    def add_dataset(self, folder_name, train_data=True, n_samples=1000000, cutoff=-1): #I can train on r3 and test on r4. Right now i can't train on r4 and r3
+    def add_dataset(self, folder_name, train_data=True, cutoff=-1): #I can train on r3 and test on r4. Right now i can't train on r4 and r3
         x = np.load(self.base_path + folder_name + self.file_name + "_x.npy", allow_pickle=True)
         y = np.load(self.base_path + folder_name + self.file_name+ "_y.npy", allow_pickle=True)
         
@@ -45,8 +45,6 @@ class LoadData():
             x = x[mask]
             y = y[mask]
         
-        x = x[:n_samples]
-        y = y[:n_samples]
         
         print("self.x_train.shape", self.x_train.shape)
         print("x.shape", x.shape)
@@ -67,15 +65,20 @@ class LoadData():
         return self.x_train[0].shape
 
 
-    def get_dataloaders(self, dev_split_size=0.2, test_split_size=0.2, train_batch_size=16, eval_batch_size=32, normalize=False, conversions="constraints"):
+    def get_dataloaders(self, dev_split_size=0.2, test_split_size=0.2, train_batch_size=16, eval_batch_size=32, normalize=False, conversions="constraints", n_max_samples=1000000 ):
+        self.x_train = self.x_train[:n_max_samples]
+        self.y_train = self.y_train[:n_max_samples]
         
         if self.y_test.size == 0:
             first_cut = dev_split_size+test_split_size
             second_cut = dev_split_size/first_cut
-
+        
             x_train, x_test, y_train, y_test = train_test_split(self.x_train, self.y_train, test_size=first_cut, random_state=0, shuffle=True)
             x_test, x_dev, y_test, y_dev = train_test_split(x_test, y_test, test_size=second_cut, random_state=0)
         else:
+            self.x_test = self.x_test[:n_max_samples]
+            self.y_test = self.y_test[:n_max_samples]
+            
             x_train, x_dev, y_train, y_dev = train_test_split(self.x_train, self.y_train, test_size=dev_split_size, random_state=0, shuffle=True)
             x_test = self.x_test
             y_test = self.y_test

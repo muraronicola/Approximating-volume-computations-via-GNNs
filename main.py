@@ -84,27 +84,29 @@ def evaluate(model, eval_loader, device="cpu"):
     return mse, mean_error, pred_mean, pred_std, array_y, array_pred
     
 
-def find_filename():
+def find_filename(base_filename):
     i = 1
     while True:
-        file_name = "run" + str(i)
+        file_name = base_filename + "_" + "run" + "_" + str(i)
         if not os.path.exists("./runs/" + file_name + ".csv"):
             return file_name
         i += 1
 
 def main():
-    file_name = find_filename()
-    print("Saving results in: ", file_name)
-    
+
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "-path_configuration", type=str, default="./configurations/default.json", help="specify the path to the configuration file"
-    )
+    parser.add_argument("-path_configuration", type=str, default="./configurations/default.json", help="specify the path to the configuration file")
+    parser.add_argument("-out_filename", type=str, default="default", help="specify the output file name")
 
     args = parser.parse_args()
     path_configuration = args.path_configuration
+    base_filename = args.out_filename
+    
     configuration = conf.get_configuration(path_configuration)
-
+    
+    file_name = find_filename(base_filename)
+    print("Saving results in: ", file_name)
+    
     device = configuration["device"]
 
     conf_data = configuration["data"]

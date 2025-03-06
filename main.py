@@ -93,6 +93,7 @@ def find_filename(base_filename):
         i += 1
 
 def main():
+    seed = 0
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-path_configuration", type=str, default="./configurations/default.json", help="specify the path to the configuration file")
@@ -107,10 +108,12 @@ def main():
     file_name = find_filename(base_filename)
     print("Saving results in: ", file_name)
     
+    rng = np.random.default_rng(seed)
+    
     device = configuration["device"]
 
     conf_data = configuration["data"]
-    load_data = LoadData(base_path=conf_data["base_path"], exact_polytopes=conf_data["exact_polytopes"], shape=(conf_data["target_shape"][0], conf_data["target_shape"][1]))
+    load_data = LoadData(base_path=conf_data["base_path"], exact_polytopes=conf_data["exact_polytopes"], shape=(conf_data["target_shape"][0], conf_data["target_shape"][1]), rng=rng)
     load_data.add_dataset(conf_data["train-test-data"][0], train_data=conf_data["train-test-data-train"][0], cutoff=conf_data["cutoff"])
     
     if len(conf_data["train-test-data"]) == 2:

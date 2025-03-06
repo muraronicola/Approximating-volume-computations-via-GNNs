@@ -6,8 +6,9 @@ from torch_geometric.loader import DataLoader
 from sklearn.preprocessing import StandardScaler
 
 class LoadData():
-    def __init__(self, base_path="./data/", exact_polytopes=True, shape=(4,4)):
+    def __init__(self, base_path="./data/", exact_polytopes=True, shape=(4,4), rng=None):
         self.base_path = base_path
+        self.rng = rng
         
         self.file_name = "/exact_politopes" if exact_polytopes else "/all_politopes"
         
@@ -46,11 +47,11 @@ class LoadData():
             y = y[mask]
         
         
-        print("self.x_train.shape", self.x_train.shape)
+        """print("self.x_train.shape", self.x_train.shape)
         print("x.shape", x.shape)
         
         print("self.y_train.shape", self.y_train.shape)
-        print("y.shape", y.shape)
+        print("y.shape", y.shape)"""
         
         
         if train_data:
@@ -65,7 +66,13 @@ class LoadData():
         return self.x_train[0].shape
 
 
-    def get_dataloaders(self, dev_split_size=0.2, test_split_size=0.2, train_batch_size=16, eval_batch_size=32, normalize=False, conversions="constraints", n_max_samples=1000000 ):
+    def get_dataloaders(self, dev_split_size=0.2, test_split_size=0.2, train_batch_size=16, eval_batch_size=32, normalize=False, conversions="constraints", n_max_samples=100000):
+        
+        #Shuffle the data
+        p = self.rng.permutation(len(self.x_train))
+        self.x_train = self.x_train[p]
+        self.y_train = self.y_train[p]
+        
         self.x_train = self.x_train[:n_max_samples]
         self.y_train = self.y_train[:n_max_samples]
         

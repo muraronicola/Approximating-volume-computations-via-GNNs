@@ -116,8 +116,8 @@ def main():
     load_data = LoadData(base_path=conf_data["base_path"], exact_polytopes=conf_data["exact_polytopes"], shape=(conf_data["target_shape"][0], conf_data["target_shape"][1]), rng=rng)
     load_data.add_dataset(conf_data["train-test-data"][0], train_data=conf_data["train-test-data-train"][0], cutoff=conf_data["cutoff"])
     
-    if len(conf_data["train-test-data"]) == 2:
-        load_data.add_dataset(conf_data["train-test-data"][1], train_data=conf_data["train-test-data-train"][1])
+    for i in range(1, len(conf_data["train-test-data"])):
+        load_data.add_dataset(conf_data["train-test-data"][i], train_data=conf_data["train-test-data-train"][i])
     
     node_features = load_data.get_node_features()[1]
     

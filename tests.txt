@@ -10,3 +10,19 @@ From 100 to 10000
 #5 -> "max_samples": 2000
 #6 -> "max_samples": 5000
 #7 -> "max_samples": 10000
+
+
+#generalization_max_1000
+"max_samples": 1000
+
+#1 -> train_test on m_3_r_2
+#2 -> train on m_3_r_2 test on m_4_r_2
+#3 -> train on m_3_r_2 test on m_4_r_3
+#4 -> train on m_3_r_2 test on m_4_r_2 and m_4_r_3
+
+
+#generalization -> same as above
+"max_samples": 1000000
+
+
+#normalize

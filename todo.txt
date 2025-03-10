@@ -13,3 +13,11 @@ Idea: uso una distribuzione uniforme
 
 
 #Now all data gen have values between 0 and 500 (with uniform distribution)
+
+
+
+
+10/3:
+- implemento un dummyclassifier
+- homogeneus vs inhomogeneus representation 
+- Note su goodnotes

@@ -37,13 +37,18 @@ def calculate_error(out, y):
     return error_global / len(out)
 
 
-def train(model, train_loader, optimizer, criterion, device="cpu"):
+def train(model, train_loader, optimizer, criterion, encoding="none", device="cpu"):
     model.train()
 
     loss_array = []
     for data in train_loader: 
         data.to(device)
-        out = model(data.x, data.edge_index, data.batch) 
+        
+        if encoding == "heterogeneous":
+            out = model(data.x_dict, data.edge_index_dict, data.batch_dict)
+        else:
+            out = model(data.x, data.edge_index, data.batch) 
+        
         loss = criterion(out, data.y) 
         loss_array.append(loss.item())
         
@@ -56,7 +61,7 @@ def train(model, train_loader, optimizer, criterion, device="cpu"):
     return loss_array
 
 
-def evaluate(model, eval_loader, device="cpu"):
+def evaluate(model, eval_loader, encoding="none", device="cpu"):
     model.eval()
 
     with torch.no_grad():    
@@ -65,7 +70,12 @@ def evaluate(model, eval_loader, device="cpu"):
         array_y = np.empty(0)
         for data in eval_loader:
             data.to(device)
-            out = model(data.x, data.edge_index, data.batch, train=False)
+            
+        if encoding == "heterogeneous":
+            out = model(data.x_dict, data.edge_index_dict, data.batch_dict, train=False)
+        else:
+            out = model(data.x, data.edge_index, data.batch, train=False) 
+            
             #print("out: ", flatten_out)
             #print("out: ", flatten_out.detach().cpu().numpy())
             #print("data: ", data.y.detach().cpu().numpy())
@@ -150,11 +160,11 @@ def main():
     best_eval = 100000000
     best_epoch_eval = 0
     for epoch in iterator:
-        loss = train(model, train_loader, optimizer, criterion, device=device)
+        loss = train(model, train_loader, optimizer, criterion, encoding=conf_data["conversion"], device=device)
         
-        train_mse, mean_error_train, mean_pred_train, std_pred_train, _, _ = evaluate(model, train_loader, device=device)
-        dev_mse, mean_error_dev, mean_pred_dev, std_pred_dev, _, _ = evaluate(model, dev_loader, device=device)
-        test_mse, mean_error_test, mean_pred_test, std_pred_test, _, _ = evaluate(model, test_loader, device=device)
+        train_mse, mean_error_train, mean_pred_train, std_pred_train, _, _ = evaluate(model, train_loader, encoding=conf_data["conversion"], device=device)
+        dev_mse, mean_error_dev, mean_pred_dev, std_pred_dev, _, _ = evaluate(model, dev_loader, encoding=conf_data["conversion"], device=device)
+        test_mse, mean_error_test, mean_pred_test, std_pred_test, _, _ = evaluate(model, test_loader, encoding=conf_data["conversion"], device=device)
         
         
         if conf_train["loss"] == "mse":

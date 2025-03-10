@@ -13,7 +13,7 @@
         "train-data": null,
         "test-data": null,
         "normalize": true,
-        "conversion": "constraints",
+        "conversion": "heterogeneous",
         "cutoff": 10000
     },
     "train":{

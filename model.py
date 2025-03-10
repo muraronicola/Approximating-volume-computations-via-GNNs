@@ -10,6 +10,14 @@ class GCN(torch.nn.Module):
         super(GCN, self).__init__()
         torch.manual_seed(seed)
         
+        
+        # We need to use a convolutional layer to obtain the node embeddings (for the inhomogeneous case)
+        # https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.conv.RGCNConv.html#torch_geometric.nn.conv.RGCNConv
+        # https://pytorch-geometric.readthedocs.io/en/latest/get_started/introduction.html
+        # https://pytorch-geometric.readthedocs.io/en/latest/cheatsheet/gnn_cheatsheet.html#heterogeneous-graph-neural-network-operators 
+        # https://pytorch-geometric.readthedocs.io/en/latest/tutorial/heterogeneous.html
+        
+        
         self.conv1 = GraphConv(node_features, hidden_channels)
         self.conv2 = GraphConv(hidden_channels, hidden_channels)
         self.conv3 = GraphConv(hidden_channels, hidden_channels)

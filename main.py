@@ -2,7 +2,8 @@ import torch
 from LoadData import LoadData
 import configurations.configurations as conf
 import argparse
-from model import GCN
+from Heterogeneus_model import Heterogeneus
+from Homogeneus_model import Homogeneus
 from sklearn.metrics import r2_score
 import numpy as np
 import pandas as pd
@@ -37,14 +38,14 @@ def calculate_error(out, y):
     return error_global / len(out)
 
 
-def train(model, train_loader, optimizer, criterion, encoding="none", device="cpu"):
+def train(model, train_loader, optimizer, criterion, heterogeneus=False, device="cpu"):
     model.train()
 
     loss_array = []
     for data in train_loader: 
         data.to(device)
         
-        if encoding == "heterogeneous":
+        if heterogeneus:
             out = model(data.x_dict, data.edge_index_dict, data.batch_dict)
         else:
             out = model(data.x, data.edge_index, data.batch) 
@@ -61,7 +62,7 @@ def train(model, train_loader, optimizer, criterion, encoding="none", device="cp
     return loss_array
 
 
-def evaluate(model, eval_loader, encoding="none", device="cpu"):
+def evaluate(model, eval_loader, heterogeneus = False, device="cpu"):
     model.eval()
 
     with torch.no_grad():    
@@ -71,11 +72,11 @@ def evaluate(model, eval_loader, encoding="none", device="cpu"):
         for data in eval_loader:
             data.to(device)
             
-        if encoding == "heterogeneous":
-            out = model(data.x_dict, data.edge_index_dict, data.batch_dict, train=False)
-        else:
-            out = model(data.x, data.edge_index, data.batch, train=False) 
-            
+            if heterogeneus:
+                out = model(data.x_dict, data.edge_index_dict, data.batch_dict, train=False)
+            else:
+                out = model(data.x, data.edge_index, data.batch, train=False) 
+                
             #print("out: ", flatten_out)
             #print("out: ", flatten_out.detach().cpu().numpy())
             #print("data: ", data.y.detach().cpu().numpy())
@@ -123,6 +124,9 @@ def main():
     device = configuration["device"]
 
     conf_data = configuration["data"]
+    conf_model = configuration["model"]
+    conf_train = configuration["train"]
+    
     load_data = LoadData(base_path=conf_data["base_path"], exact_polytopes=conf_data["exact_polytopes"], shape=(conf_data["target_shape"][0], conf_data["target_shape"][1]), rng=rng)
     load_data.add_dataset(conf_data["train-test-data"][0], train_data=conf_data["train-test-data-train"][0], cutoff=conf_data["cutoff"])
     
@@ -132,7 +136,13 @@ def main():
     node_features = load_data.get_node_features()[1]
     
     
-    conf_train = configuration["train"]
+    if (conf_data["conversion"] == "constraints" or conf_data["conversion"] == "dimensions") and conf_model["heterogeneus"]:
+        raise ValueError("Invalid combination of converstion and heterogeneus")
+    
+    if (conf_data["conversion"] == "h1" or conf_data["conversion"] == "h2") and not conf_model["heterogeneus"]:
+        raise ValueError("Invalid combination of converstion and heterogeneus")
+    
+    
     train_loader, dev_loader, test_loader = load_data.get_dataloaders(test_split_size=conf_data["train-test-split"], dev_split_size=conf_data["train-eval-split"], train_batch_size=conf_train["train_batch_size"], eval_batch_size=conf_train["eval_batch_size"], normalize=conf_data["normalize"], conversions=conf_data["conversion"], n_max_samples=conf_data["max_samples"])
     
     
@@ -143,7 +153,11 @@ def main():
     file_config.write(json_str)
     file_config.close()
     
-    model = GCN(node_features=node_features, hidden_channels=conf_train["hidden_channels"], p_drop=conf_train["dropout"]).to(device)
+    if conf_model["heterogeneus"]:
+        model = Heterogeneus(node_features=node_features, hidden_channels=conf_train["hidden_channels"], n_releations=conf_model["n_releations"], p_drop=conf_train["dropout"]).to(device)
+    else:
+        model = Homogeneus(node_features=node_features, hidden_channels=conf_train["hidden_channels"], p_drop=conf_train["dropout"]).to(device)
+    
     optimizer = torch.optim.Adam(model.parameters(), lr=conf_train["learning_rate"])
     #optimizer = torch.optim.SGD(model.parameters(), lr=0.000005)
     
@@ -160,11 +174,11 @@ def main():
     best_eval = 100000000
     best_epoch_eval = 0
     for epoch in iterator:
-        loss = train(model, train_loader, optimizer, criterion, encoding=conf_data["conversion"], device=device)
+        loss = train(model, train_loader, optimizer, criterion, heterogeneus=conf_model["heterogeneus"], device=device)
         
-        train_mse, mean_error_train, mean_pred_train, std_pred_train, _, _ = evaluate(model, train_loader, encoding=conf_data["conversion"], device=device)
-        dev_mse, mean_error_dev, mean_pred_dev, std_pred_dev, _, _ = evaluate(model, dev_loader, encoding=conf_data["conversion"], device=device)
-        test_mse, mean_error_test, mean_pred_test, std_pred_test, _, _ = evaluate(model, test_loader, encoding=conf_data["conversion"], device=device)
+        train_mse, mean_error_train, mean_pred_train, std_pred_train, _, _ = evaluate(model, train_loader, heterogeneus=conf_model["heterogeneus"], device=device)
+        dev_mse, mean_error_dev, mean_pred_dev, std_pred_dev, _, _ = evaluate(model, dev_loader, heterogeneus=conf_model["heterogeneus"], device=device)
+        test_mse, mean_error_test, mean_pred_test, std_pred_test, _, _ = evaluate(model, test_loader, heterogeneus=conf_model["heterogeneus"], device=device)
         
         
         if conf_train["loss"] == "mse":

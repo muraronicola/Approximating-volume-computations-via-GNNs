@@ -12,9 +12,13 @@
         "target_shape": [3, 3],
         "train-data": null,
         "test-data": null,
-        "normalize": true,
-        "conversion": "heterogeneous",
+        "normalize": false,
+        "conversion": "h2",
         "cutoff": 10000
+    },
+    "model":{
+        "heterogeneus": true,
+        "n_releations": 3
     },
     "train":{
         "train_batch_size": 2048,

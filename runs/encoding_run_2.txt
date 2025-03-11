@@ -13,8 +13,9 @@
 3],
 'train-data': None,
 'test-data': None,
-'normalize': True,
+'normalize': False,
 'conversion': 'dimensions',
+'heterogeneus': False,
 'cutoff': 10000
 },
 'train': {

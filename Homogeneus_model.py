@@ -4,10 +4,10 @@ import torch.nn.functional as F
 from torch_geometric.nn import GraphConv, global_mean_pool
 
 
-class GCN(torch.nn.Module):
+class Homogeneus(torch.nn.Module):
     
     def __init__(self, node_features, hidden_channels, p_drop=0.3, seed=0):
-        super(GCN, self).__init__()
+        super(Homogeneus, self).__init__()
         torch.manual_seed(seed)
         
         
@@ -70,5 +70,6 @@ class GCN(torch.nn.Module):
         
         x = self.out(x)
         x = torch.flatten(x)
+        #print("output shape", x.shape)
         
         return x

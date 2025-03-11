@@ -13,9 +13,13 @@
 3],
 'train-data': None,
 'test-data': None,
-'normalize': True,
-'conversion': 'heterogeneous',
+'normalize': False,
+'conversion': 'h2',
 'cutoff': 10000
+},
+'model': {
+'heterogeneus': True,
+'n_releations': 3
 },
 'train': {
 'train_batch_size': 2048,

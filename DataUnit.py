@@ -103,7 +103,7 @@ class DataUnit(Dataset):
     
     def h2(self, x, y):
         #I coefficienti hanno lo stesso tipo per la stessa dimensione
-        debug = True
+        debug = False
         
         converted_data = []
         for index in range(len(x)):

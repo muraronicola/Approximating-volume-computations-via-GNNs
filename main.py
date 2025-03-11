@@ -232,19 +232,19 @@ def main():
     
     
     
-    _, _, _, _, y, y_pred = evaluate(model, train_loader, device=device)
+    _, _, _, _, y, y_pred = evaluate(model, train_loader heterogeneus=conf_model["heterogeneus"], device=device)
     train_predictions = pd.DataFrame(columns=["y", "y_pred"])
     train_predictions["y"] = y
     train_predictions["y_pred"] = y_pred
     train_predictions.to_csv("./runs/" + file_name + "_train_predictions.csv")
     
-    _, _, _, _, y, y_pred = evaluate(model, dev_loader, device=device)
+    _, _, _, _, y, y_pred = evaluate(model, dev_loader, heterogeneus=conf_model["heterogeneus"], device=device)
     dev_predictions = pd.DataFrame(columns=["y", "y_pred"])
     dev_predictions["y"] = y
     dev_predictions["y_pred"] = y_pred
     dev_predictions.to_csv("./runs/" + file_name + "_dev_predictions.csv")
     
-    _, _, _, _, y, y_pred = evaluate(model, test_loader, device=device)
+    _, _, _, _, y, y_pred = evaluate(model, test_loader, heterogeneus=conf_model["heterogeneus"], device=device)
     test_predictions = pd.DataFrame(columns=["y", "y_pred"])
     test_predictions["y"] = y
     test_predictions["y_pred"] = y_pred

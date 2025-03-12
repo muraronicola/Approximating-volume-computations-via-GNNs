@@ -21,3 +21,8 @@ Idea: uso una distribuzione uniforme
 - implemento un dummyclassifier
 - homogeneus vs inhomogeneus representation 
 - Note su goodnotes
+
+
+12/3
+- implemento h1
+- i riusultati sono migliori in inhomogeneus

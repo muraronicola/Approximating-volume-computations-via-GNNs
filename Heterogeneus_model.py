@@ -60,7 +60,7 @@ class Heterogeneus(torch.nn.Module):
         hidden_channels_linear = hidden_channels * 3
         self.linear1 = Linear(hidden_channels_linear, hidden_channels_linear)
         self.linear2 = Linear(hidden_channels_linear, hidden_channels_linear)
-        self.linear3 = Linear(hidden_channels_linear ,hidden_channels_linear)
+        self.linear3 = Linear(hidden_channels_linear, hidden_channels_linear)
         self.out = Linear(hidden_channels_linear, 1)
         
         torch.nn.init.uniform_(self.out.weight) 

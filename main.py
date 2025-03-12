@@ -232,7 +232,7 @@ def main():
     
     
     
-    _, _, _, _, y, y_pred = evaluate(model, train_loader heterogeneus=conf_model["heterogeneus"], device=device)
+    _, _, _, _, y, y_pred = evaluate(model, train_loader, heterogeneus=conf_model["heterogeneus"], device=device)
     train_predictions = pd.DataFrame(columns=["y", "y_pred"])
     train_predictions["y"] = y
     train_predictions["y_pred"] = y_pred

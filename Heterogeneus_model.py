@@ -28,6 +28,29 @@ class Heterogeneus(torch.nn.Module):
         num_layers = 7
         
         self.convs = torch.nn.ModuleList()
+        
+        
+        #For H1:
+        for _ in range(num_layers):
+            conv = HeteroConv({
+                ('a_0', 'a_columns', 'a_1'):  GraphConv(-1, hidden_channels),
+                ('a_0', 'a_columns', 'a_2'):  GraphConv(-1, hidden_channels),
+                ('a_1', 'a_columns', 'a_0'):  GraphConv(-1, hidden_channels),
+                ('a_1', 'a_columns', 'a_2'):  GraphConv(-1, hidden_channels),
+                ('a_2', 'a_columns', 'a_0'):  GraphConv(-1, hidden_channels),
+                ('a_2', 'a_columns', 'a_1'):  GraphConv(-1, hidden_channels),
+                ('a_0', 'a_b', 'b'):  GraphConv(-1, hidden_channels),
+                ('a_1', 'a_b', 'b'):  GraphConv(-1, hidden_channels),
+                ('b', 'b', 'b'):  GraphConv(-1, hidden_channels),
+                ('a_0', 'a_row', 'a_0'):  GraphConv(-1, hidden_channels),
+                ('a_1', 'a_row', 'a_1'):  GraphConv(-1, hidden_channels),
+                ('a_2', 'a_row', 'a_2'):  GraphConv(-1, hidden_channels),
+            }, aggr='sum')
+            self.convs.append(conv)
+            
+        
+        #For H2:
+        """
         for _ in range(num_layers):
             conv = HeteroConv({
                 ('a_1', 'a_columns_1', 'a_1'):  GraphConv(-1, hidden_channels),
@@ -38,7 +61,9 @@ class Heterogeneus(torch.nn.Module):
                 ('a_1', 'a_rows_1', 'a_0'):  GraphConv(-1, hidden_channels),
             }, aggr='sum')
             self.convs.append(conv)
-            
+        """
+        
+        
         """('a_1', 'a_columns_1', 'a_1'):  GraphConv(node_features, hidden_channels),
         ('a_0', 'a_b_0', 'b'):  GraphConv(node_features, hidden_channels),
         ('a_1', 'a_b_1', 'b'):  GraphConv(node_features, hidden_channels),

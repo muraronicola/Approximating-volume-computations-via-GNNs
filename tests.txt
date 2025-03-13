@@ -26,3 +26,11 @@ From 100 to 10000
 
 
 #normalize
+
+
+
+#encoding
+
+run 6-7 hanno le relazioni senza un nome specifico
+
+run 3 era h2 (con nomi delle relazioni specifiche)

@@ -42,10 +42,10 @@ class DataUnit(Dataset):
             
             for i in range(len(data_a)):
                 data_one_dimention = torch.tensor(data_a[i], dtype=torch.float)
-                data_i['a_{}'.format(i)].x = data_one_dimention
+                data_i['a_{}'.format(i)].x = data_one_dimention.unsqueeze(1)
             
             data_b = torch.tensor(this_x[:, -1].astype('float64'), dtype=torch.float)
-            data_i['b'].x = data_b
+            data_i['b'].x = data_b.unsqueeze(1)
 
             
             #Edges between same dimension
@@ -112,12 +112,92 @@ class DataUnit(Dataset):
             #exit(0)
             
             
-            print("This is the data_i: ", data_i)
-            exit(0)
-
         return converted_data
     
     def h2(self, x, y):
+        #I coefficienti hanno lo stesso tipo per la stessa dimensione
+        
+        converted_data = []
+        for index in range(len(x)):
+            this_x = x[index]
+            this_y = y[index]
+            
+            """print("This is the x: ", this_x)
+            print("This is the y: ", this_y)"""
+            
+            torch_y = torch.tensor(this_y, dtype=torch.float)
+            data_i = HeteroData(y=torch_y)
+            
+            #data_a = torch.tensor(this_x[:, :-1].astype('float64'), dtype=torch.float)
+            data_a = []
+            for i in range(this_x.shape[1]-1):
+                data_a.append([])
+                
+                for j in range(this_x.shape[0]):
+                    data_a[i].append(this_x[j, i])
+            
+            for i in range(len(data_a)):
+                data_one_dimention = torch.tensor(data_a[i], dtype=torch.float)
+                data_i['a_{}'.format(i)].x = data_one_dimention.unsqueeze(1)
+            
+            data_b = torch.tensor(this_x[:, -1].astype('float64'), dtype=torch.float)
+            data_i['b'].x = data_b.unsqueeze(1)
+
+            
+            #Edges between same dimension
+            edge_between_same_dim = []
+            
+            for i in range(this_x.shape[0]):
+                for j in range(this_x.shape[0]):
+                    if i != j:
+                        edge_between_same_dim.append([i, j])
+            
+            for i in range(this_x.shape[1]-1):
+                edge_index = torch.tensor(edge_between_same_dim, dtype=torch.long).t().contiguous()
+                data_i['a_{}'.format(i), "a_columns".format(i), 'a_{}'.format(i)].edge_index = edge_index
+            
+            data_edge_a_b = []
+            for i in range(this_x.shape[0]):
+                data_edge_a_b.append([i, i])
+                
+            edge_index = torch.tensor(data_edge_a_b, dtype=torch.long).t().contiguous()
+            
+            for i in range(this_x.shape[1]-1):
+                data_i['a_{}'.format(i), "a_b", 'b'].edge_index = edge_index
+            
+            data_i['b', 'b', 'b'].edge_index = torch.tensor(edge_between_same_dim, dtype=torch.long).t().contiguous()
+            
+            
+            data_edge_a_a_rows = []
+            for i in range(this_x.shape[0]):
+                data_edge_a_a_rows.append([i, i])
+            #print("This is the data_edge_a_a_rows: ", data_edge_a_a_rows)
+            
+            for i in range(this_x.shape[1] - 1):
+                for j in range(this_x.shape[1] - 1):
+                    if i != j:
+                        edge_index = torch.tensor(data_edge_a_a_rows, dtype=torch.long).t().contiguous()
+                        data_i['a_{}'.format(i), "a_rows", 'a_{}'.format(j)].edge_index = edge_index
+            
+            """print("This is the data_i: ", data_i)
+            print("This is the data_i['a_0']: ", data_i['a_0'])
+            print("This is the data_i['a_1']: ", data_i['a_1'])
+            print("This is the data_i['b']: ", data_i['b'])
+            print("This is the data_i['a_0', 'a_columns_0, 'a_0']: ", data_i['a_0', 'a_columns_0', 'a_0'])
+            print("This is the data_i['b', 'b', 'b']: ", data_i['b', 'b', 'b'])
+            print("This is the data_i['a_0', 'a_b_0', 'b']: ", data_i['a_0', 'a_b_0', 'b'])
+            print("This is the data_i['a_0', 'a_b_0', 'b']: ", data_i['a_0', 'a_b_0', 'b'])
+            print("This is the data_i['a_0', 'a_rows_0, 'a_1']: ", data_i['a_0', 'a_rows_0', 'a_1'])
+        
+            converted_data.append(data_i)
+            exit(0)"""
+            
+            converted_data.append(data_i)
+
+        return converted_data
+    
+    
+    def h2_old(self, x, y):
         #I coefficienti hanno lo stesso tipo per la stessa dimensione
         debug = False
         
@@ -213,8 +293,8 @@ class DataUnit(Dataset):
             converted_data.append(Data(x=torch_x, edge_index=edge_index, y=torch_y))
             """
             
-            print("This is the data_i: ", data_i)
-            exit(0)
+            """print("This is the data_i: ", data_i)
+            exit(0)"""
 
         return converted_data
 

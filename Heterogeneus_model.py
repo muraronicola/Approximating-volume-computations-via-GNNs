@@ -31,7 +31,7 @@ class Heterogeneus(torch.nn.Module):
         
         
         #For H1:
-        for _ in range(num_layers):
+        """for _ in range(num_layers):
             conv = HeteroConv({
                 ('a_0', 'a_columns', 'a_1'):  GraphConv(-1, hidden_channels),
                 ('a_0', 'a_columns', 'a_2'):  GraphConv(-1, hidden_channels),
@@ -47,12 +47,28 @@ class Heterogeneus(torch.nn.Module):
                 ('a_2', 'a_row', 'a_2'):  GraphConv(-1, hidden_channels),
             }, aggr='sum')
             self.convs.append(conv)
-            
-        
+        """
+
         #For H2:
+        
+        for _ in range(num_layers):
+            conv = HeteroConv({
+                ('a_0', 'a_columns', 'a_0'):  GraphConv(-1, hidden_channels),
+                ('a_1', 'a_columns', 'a_1'):  GraphConv(-1, hidden_channels),
+                ('a_0', 'a_b', 'b'):  GraphConv(-1, hidden_channels),
+                ('a_1', 'a_b', 'b'):  GraphConv(-1, hidden_channels),
+                ('b', 'b', 'b'):  GraphConv(-1, hidden_channels),
+                ('a_0', 'a_rows', 'a_1'):  GraphConv(-1, hidden_channels),
+                ('a_1', 'a_rows', 'a_0'):  GraphConv(-1, hidden_channels),
+            }, aggr='sum')
+            self.convs.append(conv)
+                    
+
+        #For H2 (old version):
         """
         for _ in range(num_layers):
             conv = HeteroConv({
+                NE MANCA 1....
                 ('a_1', 'a_columns_1', 'a_1'):  GraphConv(-1, hidden_channels),
                 ('a_0', 'a_b_0', 'b'):  GraphConv(-1, hidden_channels),
                 ('a_1', 'a_b_1', 'b'):  GraphConv(-1, hidden_channels),
@@ -62,6 +78,8 @@ class Heterogeneus(torch.nn.Module):
             }, aggr='sum')
             self.convs.append(conv)
         """
+        
+  
         
         
         """('a_1', 'a_columns_1', 'a_1'):  GraphConv(node_features, hidden_channels),
@@ -82,7 +100,8 @@ class Heterogeneus(torch.nn.Module):
         
         self.dropout = Dropout(p=p_drop)
         
-        hidden_channels_linear = hidden_channels * 3
+        
+        hidden_channels_linear = hidden_channels * 3 # 4 is for h1, 3 is for h2
         self.linear1 = Linear(hidden_channels_linear, hidden_channels_linear)
         self.linear2 = Linear(hidden_channels_linear, hidden_channels_linear)
         self.linear3 = Linear(hidden_channels_linear, hidden_channels_linear)
@@ -149,5 +168,4 @@ class Heterogeneus(torch.nn.Module):
         x = self.out(x)
         x = torch.flatten(x)
         
-        #print("output shape", x.shape)
         return x

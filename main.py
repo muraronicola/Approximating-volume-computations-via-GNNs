@@ -108,13 +108,12 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-path_configuration", type=str, default="./configurations/default.json", help="specify the path to the configuration file")
-    parser.add_argument("-out_filename", type=str, default="default", help="specify the output file name")
 
     args = parser.parse_args()
     path_configuration = args.path_configuration
-    base_filename = args.out_filename
     
     configuration = conf.get_configuration(path_configuration)
+    base_filename = configuration["base_filename"]
     
     file_name = find_filename(base_filename)
     print("Saving results in: ", file_name)

@@ -1,5 +1,6 @@
 {
-    "device": "cpu",
+    "device": "cuda:0",
+    "base_filename": "normalization",
     "data": {
         "max_samples": 10000,
         "base_path": "./data/",
@@ -12,12 +13,12 @@
         "target_shape": [3, 3],
         "train-data": null,
         "test-data": null,
-        "normalize": false,
-        "conversion": "constraints",
+        "normalize": true,
+        "conversion": "h2",
         "cutoff": 10000
     },
     "model":{
-        "heterogeneus": false,
+        "heterogeneus": true,
         "n_releations": 3
     },
     "train":{
@@ -31,3 +32,4 @@
         "hidden_channels": 16
     }
 }
+

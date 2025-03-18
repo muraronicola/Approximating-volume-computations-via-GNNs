@@ -1,8 +1,8 @@
 {
     "device": "cuda:0",
-    "base_filename": "normalization",
+    "base_filename": "less_data",
     "data": {
-        "max_samples": 10000,
+        "max_samples": 100,
         "base_path": "./data/",
         "exact_polytopes": true,
         "train-test-separation" : false,
@@ -13,7 +13,7 @@
         "target_shape": [3, 3],
         "train-data": null,
         "test-data": null,
-        "normalize": true,
+        "normalize": false,
         "conversion": "h2",
         "cutoff": 10000
     },

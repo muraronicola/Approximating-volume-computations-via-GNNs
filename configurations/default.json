@@ -13,11 +13,11 @@
         "train-data": null,
         "test-data": null,
         "normalize": false,
-        "conversion": "h2",
+        "conversion": "constraints",
         "cutoff": 10000
     },
     "model":{
-        "heterogeneus": true,
+        "heterogeneus": false,
         "n_releations": 3
     },
     "train":{

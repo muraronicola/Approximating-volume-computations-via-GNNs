@@ -67,7 +67,16 @@ class LoadData():
 
 
     def get_dataloaders(self, dev_split_size=0.2, test_split_size=0.2, train_batch_size=16, eval_batch_size=32, normalize=False, conversions="constraints", n_max_samples=100000):
+        du_train, du_dev, du_test = self.get_data(dev_split_size, test_split_size, normalize, conversions, n_max_samples)
         
+        train_loader = DataLoader(du_train, batch_size=train_batch_size, shuffle=False)
+        dev_loader = DataLoader(du_dev, batch_size=eval_batch_size, shuffle=False)
+        test_loader = DataLoader(du_test, batch_size=eval_batch_size, shuffle=False)
+        
+        return train_loader, dev_loader, test_loader
+    
+    
+    def get_data(self, dev_split_size=0.2, test_split_size=0.2, normalize=False, conversions="constraints", n_max_samples=100000):
         #Shuffle the data
         p = self.rng.permutation(len(self.x_train))
         self.x_train = self.x_train[p]
@@ -97,13 +106,8 @@ class LoadData():
             x_dev = scaler.transform(x_dev.reshape(-1, x_dev.shape[-1])).reshape(x_dev.shape)
             x_test = scaler.transform(x_test.reshape(-1, x_test.shape[-1])).reshape(x_test.shape)
         
-        
         du_train = du.DataUnit(x_train, y_train, conversion=conversions)
         du_dev = du.DataUnit(x_dev, y_dev, conversion=conversions)
         du_test = du.DataUnit(x_test, y_test, conversion=conversions)
         
-        train_loader = DataLoader(du_train, batch_size=train_batch_size, shuffle=False)
-        dev_loader = DataLoader(du_dev, batch_size=eval_batch_size, shuffle=False)
-        test_loader = DataLoader(du_test, batch_size=eval_batch_size, shuffle=False)
-        
-        return train_loader, dev_loader, test_loader
+        return du_train, du_dev, du_test

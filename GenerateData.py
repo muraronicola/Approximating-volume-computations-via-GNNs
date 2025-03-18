@@ -10,17 +10,34 @@ from tqdm import tqdm
 import math
 
 def is_bounded(A, b):
-    n = A.shape[1]
+    """n = A.shape[1]
     for i in range(n):
         c = np.zeros(n)
         c[i] = 1
         res = linprog(c, A_ub=A, b_ub=b, bounds=(None, None))
         if not res.success:
-            return False
-        
+            print("First check failed")
+            #return False
+            break
+    """
+    
+    #is_ok = True
     c = np.full(n, -1)
     res = linprog(c, A_ub=A, b_ub=b, bounds=(None, None))
-    return res.success
+    if not res.success:
+        #print("Second check failed")
+        return False
+        is_ok = False
+    
+    c = np.full(n, 1)
+    res = linprog(c, A_ub=A, b_ub=b, bounds=(None, None))
+    if not res.success:
+        #print("Third check failed")
+        return False
+        is_ok = False
+    
+    #print("--------------------")
+    return  is_ok
 
 def generate_polytope(rng, m=4, r=3):
     #Ax <= b
@@ -117,6 +134,8 @@ def generate_n_polytopes(n_polytopes, base_path="./data/", seed=0, m=4, r=3, sav
         
     data_exact_politope_x = np.array(data_exact_politope_x, dtype=object)
     data_exact_politope_y = np.array(data_exact_politope_y, dtype=object)
+    
+    #exit(0)
     
     if not only_exact:
         np.save(path + "all_polytopes_x.npy", data_x)

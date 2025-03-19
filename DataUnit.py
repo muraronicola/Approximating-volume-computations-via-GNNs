@@ -22,12 +22,17 @@ class DataUnit(Dataset):
     def h1(self, x, y):
         #I coefficienti hanno lo stesso tipo per lo stesso constraint
         
+        debug = False
         converted_data = []
+        
         for index in range(len(x)):
             this_x = x[index]
             this_y = y[index]
-            #print("This is the x: ", this_x)
-            #print("This is the y: ", this_y)
+            
+            if debug:
+                print("\n\n")
+                print("This is the x: ", this_x)
+                print("This is the y: ", this_y)
             
             torch_y = torch.tensor(this_y, dtype=torch.float)
             data_i = HeteroData(y=torch_y)
@@ -64,7 +69,7 @@ class DataUnit(Dataset):
                         data_i['a_{}'.format(i), "a_columns", 'a_{}'.format(j)].edge_index = edge_index
             
             
-            for i in range(this_x.shape[1] - 1):
+            for i in range(this_x.shape[0]):
                 edge_index_a_b = []
                 for j in range(this_x.shape[1] - 1):
                     edge_index_a_b.append([j, i])
@@ -98,16 +103,18 @@ class DataUnit(Dataset):
                 edge_index = torch.tensor(data_edge_a_a_rows, dtype=torch.long).t().contiguous()
                 data_i['a_{}'.format(i), "a_row", 'a_{}'.format(i)].edge_index = edge_index
     
-            """print("This is the data_i: ", data_i)
-            print("This is the data_i['a_0']: ", data_i['a_0'])
-            print("This is the data_i['a_1']: ", data_i['a_1'])
-            print("This is the data_i['b']: ", data_i['b'])
-            print("This is the data_i['a_0', 'a_columns_0, 'a_1']: ", data_i['a_0', 'a_columns_0', 'a_1'])
-            print("This is the data_i['b', 'b', 'b']: ", data_i['b', 'b', 'b'])
-            print("This is the data_i['a_0', 'a_b_0', 'b']: ", data_i['a_0', 'a_b_0', 'b'])
-            print("This is the data_i['a_1', 'a_b_1', 'b']: ", data_i['a_1', 'a_b_1', 'b'])
-            print("This is the data_i['a_0', 'a_rows_0, 'a_0']: ", data_i['a_0', 'a_rows_0', 'a_0'])
-            """
+            if debug:
+                debug = False
+                print("This is the data_i: ", data_i)
+                print("This is the data_i['a_0']: ", data_i['a_0'])
+                print("This is the data_i['a_1']: ", data_i['a_1'])
+                print("This is the data_i['b']: ", data_i['b'])
+                print("This is the data_i['a_0', 'a_columns_0, 'a_1']: ", data_i['a_0', 'a_columns_0', 'a_1'])
+                print("This is the data_i['b', 'b', 'b']: ", data_i['b', 'b', 'b'])
+                print("This is the data_i['a_0', 'a_b_0', 'b']: ", data_i['a_0', 'a_b_0', 'b'])
+                print("This is the data_i['a_1', 'a_b_1', 'b']: ", data_i['a_1', 'a_b_1', 'b'])
+                print("This is the data_i['a_0', 'a_rows_0, 'a_0']: ", data_i['a_0', 'a_rows_0', 'a_0'])
+
             converted_data.append(data_i)
             #exit(0)
             
@@ -117,13 +124,14 @@ class DataUnit(Dataset):
     def h2(self, x, y):
         #I coefficienti hanno lo stesso tipo per la stessa dimensione
         
-        debug = True
+        debug = False
         converted_data = []
         for index in range(len(x)):
             this_x = x[index]
             this_y = y[index]
             
             if debug:
+                print("\n\n")
                 print("This is the x: ", this_x)
                 print("This is the y: ", this_y)
             

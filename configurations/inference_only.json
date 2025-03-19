@@ -1,6 +1,6 @@
 {
-    "device": "cuda:0",
-    "base_filename": "generalization",
+    "device": "cpu",
+    "model_name": "generalization_run_2",
     "data": {
         "max_samples": 100,
         "base_path": "./data/",
@@ -9,10 +9,8 @@
         "train-test-split" : 0.2,
         "train-eval-split" : 0.2,
         "train-test-data" : ["m_3_r_2"],
-        "train-test-data-train": [true],
+        "train-test-data-train": [false],
         "target_shape": [5, 5],
-        "train-data": null,
-        "test-data": null,
         "normalize": false,
         "conversion": "h1",
         "cutoff": 10000

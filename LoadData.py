@@ -66,7 +66,7 @@ class LoadData():
         return self.x_train[0].shape
 
 
-    def get_dataloaders(self, dev_split_size=0.2, test_split_size=0.2, train_batch_size=16, eval_batch_size=32, normalize=False, conversions="constraints", n_max_samples=100000):
+    def get_dataloaders(self, dev_split_size=0.2, test_split_size=0.2, train_batch_size=16, eval_batch_size=32, normalize=False, conversions="constraints", n_max_samples=100000, only_inference=False):
         du_train, du_dev, du_test = self.get_data(dev_split_size, test_split_size, normalize, conversions, n_max_samples)
         
         train_loader = DataLoader(du_train, batch_size=train_batch_size, shuffle=False)
@@ -76,7 +76,9 @@ class LoadData():
         return train_loader, dev_loader, test_loader
     
     
-    def get_data(self, dev_split_size=0.2, test_split_size=0.2, normalize=False, conversions="constraints", n_max_samples=100000):
+    def get_data(self, dev_split_size=0.2, test_split_size=0.2, normalize=False, conversions="constraints", n_max_samples=100000, only_inference=False):
+        
+        
         #Shuffle the data
         p = self.rng.permutation(len(self.x_train))
         self.x_train = self.x_train[p]
@@ -85,19 +87,23 @@ class LoadData():
         self.x_train = self.x_train[:n_max_samples]
         self.y_train = self.y_train[:n_max_samples]
         
-        if self.y_test.size == 0:
-            first_cut = dev_split_size+test_split_size
-            second_cut = dev_split_size/first_cut
-        
-            x_train, x_test, y_train, y_test = train_test_split(self.x_train, self.y_train, test_size=first_cut, random_state=0, shuffle=True)
-            x_test, x_dev, y_test, y_dev = train_test_split(x_test, y_test, test_size=second_cut, random_state=0)
+        if only_inference:
+            x_train = self.x_test
+            y_train = self.y_train
         else:
-            self.x_test = self.x_test[:n_max_samples]
-            self.y_test = self.y_test[:n_max_samples]
+            if self.y_test.size == 0:
+                first_cut = dev_split_size+test_split_size
+                second_cut = dev_split_size/first_cut
             
-            x_train, x_dev, y_train, y_dev = train_test_split(self.x_train, self.y_train, test_size=dev_split_size, random_state=0, shuffle=True)
-            x_test = self.x_test
-            y_test = self.y_test
+                x_train, x_test, y_train, y_test = train_test_split(self.x_train, self.y_train, test_size=first_cut, random_state=0, shuffle=True)
+                x_test, x_dev, y_test, y_dev = train_test_split(x_test, y_test, test_size=second_cut, random_state=0)
+            else:
+                self.x_test = self.x_test[:n_max_samples]
+                self.y_test = self.y_test[:n_max_samples]
+                
+                x_train, x_dev, y_train, y_dev = train_test_split(self.x_train, self.y_train, test_size=dev_split_size, random_state=0, shuffle=True)
+                x_test = self.x_test
+                y_test = self.y_test
         
         
         if normalize:

@@ -2,6 +2,7 @@ import torch
 from torch.nn import Linear, Dropout
 import torch.nn.functional as F
 from torch_geometric.nn import RGCNConv, global_mean_pool, HeteroConv, GCNConv, SAGEConv, GATConv, Linear, GraphConv
+import copy
 
 class Heterogeneus(torch.nn.Module):
     
@@ -19,9 +20,35 @@ class Heterogeneus(torch.nn.Module):
         
         
         self.convs = torch.nn.ModuleList()
+        dictionary = {}
+        hidden_channels_linear = hidden_channels
         
         if conversion == "h1":
+            #print("\n\n")
+            #print("-"*50)
+            #print("I'm in the model")
             
+            
+            
+            for i in range(targhet_shape[0]):
+                for j in range(targhet_shape[0]):
+                    if i != j:
+                        dictionary[('a_'+str(i), 'a_columns', 'a_'+str(j))] = GraphConv(-1, hidden_channels)
+                        #print("a_"+ str(i) + " --- " + "a_columns" + " --- " + "a_"+str(j))
+                        
+            for i in range(targhet_shape[0]):
+                dictionary[('a_'+str(i), 'a_b', 'b')] = GraphConv(-1, hidden_channels)
+                #print("a_"+ str(i) + " --- " + "a_b" + " --- " + "b")
+            
+            
+            dictionary[('b', 'b', 'b')] = GraphConv(-1, hidden_channels)
+            #print("b --- b --- b")
+            
+            for i in range(targhet_shape[0]):
+                dictionary[('a_'+str(i), 'a_rows', 'a_'+str(i))] = GraphConv(-1, hidden_channels)
+                #print("a_"+ str(i) + " --- " + "a_rows" + " --- " + "a_"+str(i))
+            
+            hidden_channels_linear = hidden_channels * (targhet_shape[0] + 1) # 4 is for h1, 3 is for h2
             
             """#For H1:
             for _ in range(n_layers):
@@ -34,6 +61,7 @@ class Heterogeneus(torch.nn.Module):
                     ('a_2', 'a_columns', 'a_1'):  GraphConv(-1, hidden_channels),
                     ('a_0', 'a_b', 'b'):  GraphConv(-1, hidden_channels),
                     ('a_1', 'a_b', 'b'):  GraphConv(-1, hidden_channels),
+                    ('a_2', 'a_b', 'b'):  GraphConv(-1, hidden_channels),
                     ('b', 'b', 'b'):  GraphConv(-1, hidden_channels),
                     ('a_0', 'a_row', 'a_0'):  GraphConv(-1, hidden_channels),
                     ('a_1', 'a_row', 'a_1'):  GraphConv(-1, hidden_channels),
@@ -41,9 +69,36 @@ class Heterogeneus(torch.nn.Module):
                 }, aggr='sum')
                 self.convs.append(conv)
                 """
-        else:
             
-            exit(0)
+            #hidden_channels_linear = hidden_channels  # 4 is for h1, 3 is for h2
+            
+        else:
+            #print("\n\n")
+            #print("-"*50)
+            #print("I'm in the model")
+            
+            for i in range(targhet_shape[1]-1):
+                dictionary[('a_'+str(i), 'a_columns', 'a_'+str(i))] = GraphConv(-1, hidden_channels)
+                #print("a_"+ str(i) + " --- " + "a_columns" + " --- " + "a_"+str(i))
+            
+            for i in range(targhet_shape[1]-1):
+                dictionary[('a_'+str(i), 'a_b', 'b')] = GraphConv(-1, hidden_channels)
+                #print("a_"+ str(i) + " --- " + "a_b" + " --- " + "b")
+                
+            dictionary[('b', 'b', 'b')] = GraphConv(-1, hidden_channels)
+            #print("b --- b --- b")
+            
+            
+            for i in range(targhet_shape[1]-1):
+                for j in range(targhet_shape[1]-1):
+                    if i != j:
+                        dictionary[('a_'+str(i), 'a_rows', 'a_'+str(j))] = GraphConv(-1, hidden_channels)
+                        #print("a_"+ str(i) + " --- " + "a_rows" + " --- " + "a_"+str(j))
+            
+            
+            
+            hidden_channels_linear = hidden_channels * targhet_shape[1]  # 4 is for h1, 3 is for h2
+            
             """
             #For H2:
             for _ in range(n_layers):
@@ -61,7 +116,6 @@ class Heterogeneus(torch.nn.Module):
                     
 
 
-
         #For H2 (old old version):
         """
         for _ in range(n_layers):
@@ -77,9 +131,29 @@ class Heterogeneus(torch.nn.Module):
             self.convs.append(conv)
         """
         
+        for _ in range(n_layers):
+            conv = HeteroConv(copy.deepcopy(dictionary), aggr='sum')
+            self.convs.append(conv)
+        
+        #print(dictionary)
+        """print("-"*50)
+        print({
+                    ('a_0', 'a_columns', 'a_1'):  GraphConv(-1, hidden_channels),
+                    ('a_0', 'a_columns', 'a_2'):  GraphConv(-1, hidden_channels),
+                    ('a_1', 'a_columns', 'a_0'):  GraphConv(-1, hidden_channels),
+                    ('a_1', 'a_columns', 'a_2'):  GraphConv(-1, hidden_channels),
+                    ('a_2', 'a_columns', 'a_0'):  GraphConv(-1, hidden_channels),
+                    ('a_2', 'a_columns', 'a_1'):  GraphConv(-1, hidden_channels),
+                    ('a_0', 'a_b', 'b'):  GraphConv(-1, hidden_channels),
+                    ('a_1', 'a_b', 'b'):  GraphConv(-1, hidden_channels),
+                    ('b', 'b', 'b'):  GraphConv(-1, hidden_channels),
+                    ('a_0', 'a_row', 'a_0'):  GraphConv(-1, hidden_channels),
+                    ('a_1', 'a_row', 'a_1'):  GraphConv(-1, hidden_channels),
+                    ('a_2', 'a_row', 'a_2'):  GraphConv(-1, hidden_channels),
+                })
+        """
         self.dropout = Dropout(p=p_drop)
         
-        hidden_channels_linear = hidden_channels * 3 # 4 is for h1, 3 is for h2
         self.linear1 = Linear(hidden_channels_linear, hidden_channels_linear)
         self.linear2 = Linear(hidden_channels_linear, hidden_channels_linear)
         self.linear3 = Linear(hidden_channels_linear, hidden_channels_linear)
@@ -89,6 +163,8 @@ class Heterogeneus(torch.nn.Module):
 
     def forward(self, x, edge_index, batch, train=True):
         # 1. Obtain node embeddings
+        
+        #print("edge_index", edge_index)
         
         """print("x", x)
         print("edge_index", edge_index)

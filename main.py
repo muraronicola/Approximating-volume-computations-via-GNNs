@@ -11,6 +11,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import os
+import copy
 
 def r2_accuracy(pred_y, y):
     score = r2_score(y, pred_y)
@@ -126,6 +127,8 @@ def main():
     conf_model = configuration["model"]
     conf_train = configuration["train"]
     
+    conf_data["target_shape"][1] += 1
+    
     load_data = LoadData(base_path=conf_data["base_path"], exact_polytopes=conf_data["exact_polytopes"], shape=(conf_data["target_shape"][0], conf_data["target_shape"][1]), rng=rng)
     load_data.add_dataset(conf_data["train-test-data"][0], train_data=conf_data["train-test-data-train"][0], cutoff=conf_data["cutoff"])
     
@@ -172,6 +175,7 @@ def main():
     iterator = tqdm(range(1, conf_train["train_epochs"]+1))
     best_eval = 100000000
     best_epoch_eval = 0
+    best_model = None
     for epoch in iterator:
         loss = train(model, train_loader, optimizer, criterion, heterogeneus=conf_model["heterogeneus"], device=device)
         
@@ -184,6 +188,7 @@ def main():
             if dev_mse < best_eval:
                 best_eval = dev_mse
                 best_epoch_eval = epoch
+                best_model = copy.deepcopy(model)
         else:
             if mean_error_dev < best_eval:
                 best_eval = mean_error_dev
@@ -198,7 +203,7 @@ def main():
         iterator.set_description(f'Train mean loss: { np.mean(loss):.4f}')
 
     results.to_csv("./runs/" + file_name + ".csv")
-    
+    torch.save(best_model, "./runs/" + file_name + ".pt")
     
     figure2, ax2 = plt.subplots(5, 3, figsize=(18, 20))
 

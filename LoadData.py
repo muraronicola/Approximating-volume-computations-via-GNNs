@@ -67,7 +67,7 @@ class LoadData():
 
 
     def get_dataloaders(self, dev_split_size=0.2, test_split_size=0.2, train_batch_size=16, eval_batch_size=32, normalize=False, conversions="constraints", n_max_samples=100000, only_inference=False):
-        du_train, du_dev, du_test = self.get_data(dev_split_size, test_split_size, normalize, conversions, n_max_samples)
+        du_train, du_dev, du_test = self.get_data(dev_split_size, test_split_size, normalize, conversions, n_max_samples, only_inference)
         
         train_loader = DataLoader(du_train, batch_size=train_batch_size, shuffle=False)
         dev_loader = DataLoader(du_dev, batch_size=eval_batch_size, shuffle=False)

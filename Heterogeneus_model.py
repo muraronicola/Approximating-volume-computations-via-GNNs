@@ -5,7 +5,7 @@ from torch_geometric.nn import RGCNConv, global_mean_pool, HeteroConv, GCNConv, 
 
 class Heterogeneus(torch.nn.Module):
     
-    def __init__(self, node_features, hidden_channels, n_releations, p_drop=0.3, seed=0):
+    def __init__(self, node_features, hidden_channels, n_releations, targhet_shape, conversion, n_layers, p_drop=0.3, seed=0):
         super(Heterogeneus, self).__init__()
         torch.manual_seed(seed)
         
@@ -17,56 +17,54 @@ class Heterogeneus(torch.nn.Module):
         # https://pytorch-geometric.readthedocs.io/en/latest/tutorial/heterogeneous.html
         
         
-        """self.conv1 = GraphConv(node_features, hidden_channels)
-        self.conv2 = GraphConv(hidden_channels, hidden_channels)
-        self.conv3 = GraphConv(hidden_channels, hidden_channels)
-        self.conv4 = GraphConv(hidden_channels, hidden_channels)
-        self.conv5 = GraphConv(hidden_channels, hidden_channels)
-        self.conv6 = GraphConv(hidden_channels, hidden_channels)
-        self.conv7 = GraphConv(hidden_channels, hidden_channels)"""
-        
-        num_layers = 7
         
         self.convs = torch.nn.ModuleList()
         
-        
-        #For H1:
-        """for _ in range(num_layers):
-            conv = HeteroConv({
-                ('a_0', 'a_columns', 'a_1'):  GraphConv(-1, hidden_channels),
-                ('a_0', 'a_columns', 'a_2'):  GraphConv(-1, hidden_channels),
-                ('a_1', 'a_columns', 'a_0'):  GraphConv(-1, hidden_channels),
-                ('a_1', 'a_columns', 'a_2'):  GraphConv(-1, hidden_channels),
-                ('a_2', 'a_columns', 'a_0'):  GraphConv(-1, hidden_channels),
-                ('a_2', 'a_columns', 'a_1'):  GraphConv(-1, hidden_channels),
-                ('a_0', 'a_b', 'b'):  GraphConv(-1, hidden_channels),
-                ('a_1', 'a_b', 'b'):  GraphConv(-1, hidden_channels),
-                ('b', 'b', 'b'):  GraphConv(-1, hidden_channels),
-                ('a_0', 'a_row', 'a_0'):  GraphConv(-1, hidden_channels),
-                ('a_1', 'a_row', 'a_1'):  GraphConv(-1, hidden_channels),
-                ('a_2', 'a_row', 'a_2'):  GraphConv(-1, hidden_channels),
-            }, aggr='sum')
-            self.convs.append(conv)
-        """
-
-        #For H2:
-        
-        for _ in range(num_layers):
-            conv = HeteroConv({
-                ('a_0', 'a_columns', 'a_0'):  GraphConv(-1, hidden_channels),
-                ('a_1', 'a_columns', 'a_1'):  GraphConv(-1, hidden_channels),
-                ('a_0', 'a_b', 'b'):  GraphConv(-1, hidden_channels),
-                ('a_1', 'a_b', 'b'):  GraphConv(-1, hidden_channels),
-                ('b', 'b', 'b'):  GraphConv(-1, hidden_channels),
-                ('a_0', 'a_rows', 'a_1'):  GraphConv(-1, hidden_channels),
-                ('a_1', 'a_rows', 'a_0'):  GraphConv(-1, hidden_channels),
-            }, aggr='sum')
-            self.convs.append(conv)
+        if conversion == "h1":
+            
+            
+            """#For H1:
+            for _ in range(n_layers):
+                conv = HeteroConv({
+                    ('a_0', 'a_columns', 'a_1'):  GraphConv(-1, hidden_channels),
+                    ('a_0', 'a_columns', 'a_2'):  GraphConv(-1, hidden_channels),
+                    ('a_1', 'a_columns', 'a_0'):  GraphConv(-1, hidden_channels),
+                    ('a_1', 'a_columns', 'a_2'):  GraphConv(-1, hidden_channels),
+                    ('a_2', 'a_columns', 'a_0'):  GraphConv(-1, hidden_channels),
+                    ('a_2', 'a_columns', 'a_1'):  GraphConv(-1, hidden_channels),
+                    ('a_0', 'a_b', 'b'):  GraphConv(-1, hidden_channels),
+                    ('a_1', 'a_b', 'b'):  GraphConv(-1, hidden_channels),
+                    ('b', 'b', 'b'):  GraphConv(-1, hidden_channels),
+                    ('a_0', 'a_row', 'a_0'):  GraphConv(-1, hidden_channels),
+                    ('a_1', 'a_row', 'a_1'):  GraphConv(-1, hidden_channels),
+                    ('a_2', 'a_row', 'a_2'):  GraphConv(-1, hidden_channels),
+                }, aggr='sum')
+                self.convs.append(conv)
+                """
+        else:
+            
+            exit(0)
+            """
+            #For H2:
+            for _ in range(n_layers):
+                conv = HeteroConv({
+                    ('a_0', 'a_columns', 'a_0'):  GraphConv(-1, hidden_channels),
+                    ('a_1', 'a_columns', 'a_1'):  GraphConv(-1, hidden_channels),
+                    ('a_0', 'a_b', 'b'):  GraphConv(-1, hidden_channels),
+                    ('a_1', 'a_b', 'b'):  GraphConv(-1, hidden_channels),
+                    ('b', 'b', 'b'):  GraphConv(-1, hidden_channels),
+                    ('a_0', 'a_rows', 'a_1'):  GraphConv(-1, hidden_channels),
+                    ('a_1', 'a_rows', 'a_0'):  GraphConv(-1, hidden_channels),
+                }, aggr='sum')
+                self.convs.append(conv)
+            """
                     
 
-        #For H2 (old version):
+
+
+        #For H2 (old old version):
         """
-        for _ in range(num_layers):
+        for _ in range(n_layers):
             conv = HeteroConv({
                 NE MANCA 1....
                 ('a_1', 'a_columns_1', 'a_1'):  GraphConv(-1, hidden_channels),
@@ -79,27 +77,7 @@ class Heterogeneus(torch.nn.Module):
             self.convs.append(conv)
         """
         
-  
-        
-        
-        """('a_1', 'a_columns_1', 'a_1'):  GraphConv(node_features, hidden_channels),
-        ('a_0', 'a_b_0', 'b'):  GraphConv(node_features, hidden_channels),
-        ('a_1', 'a_b_1', 'b'):  GraphConv(node_features, hidden_channels),
-        ('b', 'b', 'b'):  GraphConv(node_features, hidden_channels),
-        ('a_0', 'a_rows_0', 'a_1'):  GraphConv(node_features, hidden_channels),
-        ('a_1', 'a_rows_1', 'a_0'):  GraphConv(node_features, hidden_channels),"""
-        
-        
-        """self.conv1 = RGCNConv(node_features, hidden_channels, n_releations)
-        self.conv2 = RGCNConv(hidden_channels, hidden_channels, n_releations)
-        self.conv3 = RGCNConv(hidden_channels, hidden_channels, n_releations)
-        self.conv4 = RGCNConv(hidden_channels, hidden_channels, n_releations)
-        self.conv5 = RGCNConv(hidden_channels, hidden_channels, n_releations)
-        self.conv6 = RGCNConv(hidden_channels, hidden_channels, n_releations)
-        self.conv7 = RGCNConv(hidden_channels, hidden_channels, n_releations)"""
-        
         self.dropout = Dropout(p=p_drop)
-        
         
         hidden_channels_linear = hidden_channels * 3 # 4 is for h1, 3 is for h2
         self.linear1 = Linear(hidden_channels_linear, hidden_channels_linear)

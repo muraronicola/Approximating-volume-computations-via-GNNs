@@ -1,0 +1,35 @@
+{
+'device': 'cuda:0',
+'base_filename': 'loss',
+'data': {
+'max_samples': 10000,
+'base_path': './data/',
+'exact_polytopes': True,
+'train-test-separation': False,
+'train-test-split': 0.2,
+'train-eval-split': 0.2,
+'train-test-data': ['m_3_r_2'],
+'train-test-data-train': [True],
+'target_shape': [3,
+3],
+'train-data': None,
+'test-data': None,
+'normalize': False,
+'conversion': 'h2',
+'cutoff': 10000
+},
+'model': {
+'heterogeneus': True,
+'n_releations': 3
+},
+'train': {
+'train_batch_size': 2048,
+'eval_batch_size': 4096,
+'train_epochs': 5000,
+'early_stopping': 200,
+'learning_rate': 0.0005,
+'loss': 'mse',
+'dropout': 0.1,
+'hidden_channels': 16
+}
+}

@@ -1,16 +1,16 @@
 {
     "device": "cuda:0",
-    "base_filename": "less_data",
+    "base_filename": "generalization",
     "data": {
-        "max_samples": 100,
+        "max_samples": 10000,
         "base_path": "./data/",
         "exact_polytopes": true,
         "train-test-separation" : false,
         "train-test-split" : 0.2,
         "train-eval-split" : 0.2,
-        "train-test-data" : ["m_3_r_2"],
-        "train-test-data-train": [true],
-        "target_shape": [3, 3],
+        "train-test-data" : ["m_3_r_2", "m_4_r_2"],
+        "train-test-data-train": [true, true],
+        "target_shape": [4, 3],
         "train-data": null,
         "test-data": null,
         "normalize": false,
@@ -29,7 +29,8 @@
         "learning_rate": 0.0005,
         "loss": "l1",
         "dropout": 0.1,
-        "hidden_channels": 16
+        "hidden_channels": 16,
+        "n_layers": 3
     }
 }
 

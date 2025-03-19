@@ -117,13 +117,15 @@ class DataUnit(Dataset):
     def h2(self, x, y):
         #I coefficienti hanno lo stesso tipo per la stessa dimensione
         
+        debug = True
         converted_data = []
         for index in range(len(x)):
             this_x = x[index]
             this_y = y[index]
             
-            """print("This is the x: ", this_x)
-            print("This is the y: ", this_y)"""
+            if debug:
+                print("This is the x: ", this_x)
+                print("This is the y: ", this_y)
             
             torch_y = torch.tensor(this_y, dtype=torch.float)
             data_i = HeteroData(y=torch_y)
@@ -179,20 +181,20 @@ class DataUnit(Dataset):
                         edge_index = torch.tensor(data_edge_a_a_rows, dtype=torch.long).t().contiguous()
                         data_i['a_{}'.format(i), "a_rows", 'a_{}'.format(j)].edge_index = edge_index
             
-            """print("This is the data_i: ", data_i)
-            print("This is the data_i['a_0']: ", data_i['a_0'])
-            print("This is the data_i['a_1']: ", data_i['a_1'])
-            print("This is the data_i['b']: ", data_i['b'])
-            print("This is the data_i['a_0', 'a_columns_0, 'a_0']: ", data_i['a_0', 'a_columns_0', 'a_0'])
-            print("This is the data_i['b', 'b', 'b']: ", data_i['b', 'b', 'b'])
-            print("This is the data_i['a_0', 'a_b_0', 'b']: ", data_i['a_0', 'a_b_0', 'b'])
-            print("This is the data_i['a_0', 'a_b_0', 'b']: ", data_i['a_0', 'a_b_0', 'b'])
-            print("This is the data_i['a_0', 'a_rows_0, 'a_1']: ", data_i['a_0', 'a_rows_0', 'a_1'])
-        
-            converted_data.append(data_i)
-            exit(0)"""
+            if debug:
+                print("This is the data_i: ", data_i)
+                print("This is the data_i['a_0']: ", data_i['a_0'])
+                print("This is the data_i['a_1']: ", data_i['a_1'])
+                print("This is the data_i['b']: ", data_i['b'])
+                print("This is the data_i['a_0', 'a_columns_0, 'a_0']: ", data_i['a_0', 'a_columns_0', 'a_0'])
+                print("This is the data_i['b', 'b', 'b']: ", data_i['b', 'b', 'b'])
+                print("This is the data_i['a_0', 'a_b_0', 'b']: ", data_i['a_0', 'a_b_0', 'b'])
+                print("This is the data_i['a_0', 'a_b_0', 'b']: ", data_i['a_0', 'a_b_0', 'b'])
+                print("This is the data_i['a_0', 'a_rows_0, 'a_1']: ", data_i['a_0', 'a_rows_0', 'a_1'])
+                debug = False
             
             converted_data.append(data_i)
+            
 
         return converted_data
     

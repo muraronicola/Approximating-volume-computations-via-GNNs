@@ -99,6 +99,7 @@ def generate_n_polytopes(n_polytopes, base_path="./data/", seed=0, m=4, r=3, sav
 
             try:
                 volume = polytope.volume()
+                #ConvexHull
             except:
                 print("Error in volume calculation, not enough points")
                 continue

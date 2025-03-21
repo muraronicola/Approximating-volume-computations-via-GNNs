@@ -7,7 +7,7 @@ from torch_geometric.data import Data, HeteroData
 class DataUnit(Dataset):
     def __init__(self, x, y, conversion="constraints"):
 
-        if conversion != "constraints" and conversion != "dimensions" and conversion != "h1" and conversion != "h2":
+        if conversion != "constraints" and conversion != "dimensions" and conversion != "h1" and conversion != "h2" and conversion != "new":
             raise ValueError("Invalid conversion type")
         
         if conversion == "constraints" or conversion == "dimensions":
@@ -16,8 +16,91 @@ class DataUnit(Dataset):
             self.data = self.h1(x, y)
         elif conversion == "h2":
             self.data = self.h2(x, y)
+        elif conversion == "new":
+            self.data = self.new(x, y)
     
     
+    
+    def new(self, x, y):
+        debug = True
+        converted_data = []
+        
+        for index in range(len(x)):
+            this_x = x[index]
+            this_y = y[index]
+            
+            if debug:
+                print("\n\nThis is the x: ", this_x)
+                print("This is the y: ", this_y)
+                print("-"*50)
+                print("\n")
+            
+            torch_y = torch.tensor(this_y, dtype=torch.float)
+            data_i = HeteroData(y=torch_y)
+            
+            data_x = []
+            data_c = []
+            data_b = []
+            
+            for i in range(this_x.shape[1]-1):
+                data_x.append(0)  #None?
+            
+            for i in range(this_x.shape[0]):
+                data_c.append(0)  #None?
+                data_b.append(0)  #None?
+            
+            
+            data_x = torch.tensor(data_x, dtype=torch.float)
+            data_i["x"].x = data_x.unsqueeze(1)
+            
+            data_c = torch.tensor(data_c, dtype=torch.float)
+            data_i["c"].x = data_c.unsqueeze(1)
+            
+            data_b = torch.tensor(data_b, dtype=torch.float)
+            data_i["b"].x = data_b.unsqueeze(1)
+            
+            
+            #Edges between dimentions and constraints
+            edge_attr = []
+            edge_index = []
+            
+            for i in range(this_x.shape[1] - 1):
+                for j in range(this_x.shape[0]):
+                    edge_index.append([i, j])
+                    edge_attr.append(this_x[j, i])
+                    
+                    #data_i[("x_{}".format(i), "a_{0}_{1}".format(i,j), "c_{}".format(j))].edge_attr = [this_x[j, i]]
+                    #data_i[("x_{}".format(i), "a_{0}_{1}".format(i,j), "c_{}".format(j))].edge_index = [[0,1], [1,0]]
+                    #print("i: " + str(i) + "; j: " + str(j) +"  --- This is the data_i", data_i[("x_{}".format(i), "a_{0}_{1}".format(i,j), "c_{}".format(j))])
+            
+            data_i[("x", "a", "c")].edge_attr = torch.tensor(edge_attr, dtype=torch.float).unsqueeze(1)
+            data_i[("x", "a", "c")].edge_index = torch.tensor(edge_index, dtype=torch.long).t().contiguous()
+            
+            
+            #Edges between constraints and b
+            edge_attr = []
+            edge_index = []
+            
+            for i in range(this_x.shape[0]):
+                edge_index.append([i, i])
+                edge_attr.append(this_x[i, -1])
+            
+            data_i[("c", "b", "b")].edge_attr = torch.tensor(edge_attr, dtype=torch.float).unsqueeze(1)
+            data_i[("c", "b", "b")].edge_index = torch.tensor(edge_index, dtype=torch.long).t().contiguous()
+            
+            if debug:
+                debug = False
+                print("\n")
+                print("This is the data_i: ", data_i)
+                print("This is data_i[('x', 'a', 'c')]", data_i[("x", "a", "c")])
+                print("This is data_i[('c', 'b', 'b')]", data_i[("c", "b", "b")])
+
+            converted_data.append(data_i)
+            #exit(0)
+
+        #print("This is the converted_data: ", converted_data)
+        
+        return converted_data
     
     def h1(self, x, y):
         #I coefficienti hanno lo stesso tipo per lo stesso constraint
@@ -57,7 +140,6 @@ class DataUnit(Dataset):
             edge_between_same_dim = []
             
 
-                        
             edge_between_same_dim = []
             for i in range(this_x.shape[1] - 1):
                 edge_between_same_dim.append([i, i])

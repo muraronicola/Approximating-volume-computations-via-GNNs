@@ -8,13 +8,13 @@
         "train-test-separation" : false,
         "train-test-split" : 0.2,
         "train-eval-split" : 0.2,
-        "train-test-data" : ["m_3_r_2", "m_4_r_3"],
-        "train-test-data-train": [true, false],
-        "target_shape": [4, 3],
+        "train-test-data" : ["m_3_r_2"],
+        "train-test-data-train": [true],
+        "target_shape": [3, 2],
         "train-data": null,
         "test-data": null,
         "normalize": false,
-        "conversion": "h2",
+        "conversion": "new",
         "cutoff": 10000
     },
     "model":{

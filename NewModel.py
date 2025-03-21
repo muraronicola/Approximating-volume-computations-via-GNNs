@@ -57,18 +57,29 @@ class NewModel(torch.nn.Module):
     def forward(self, x, edge_index, edge_attr, batch, train=True):
         # 1. Obtain node embeddings
         
-        print("x", x)
-        print("edge_index", edge_index)
-        print("edge_attr", edge_attr)
+        #print("x", x)
+        #print("edge_index", edge_index)
+        #print("edge_attr", edge_attr)
         
+        """x["x"] = x["x"][:2]
+        x["c"] = x["c"][:3]
+        x["b"] = x["b"][:3]
+        
+        edge_attr[("x", "a", "c")] = edge_attr[("x", "a", "c")][:3]
+        edge_attr[("c", "b", "b")] = edge_attr[("c", "b", "b")][:6]
+        
+        edge_index[("x", "a", "c")] = edge_index[("x", "a", "c")][:3]
+        edge_index[("c", "b", "b")] = edge_index[("c", "b", "b")][:6]"""
 
         i = 0
         for conv in self.convs:
             print(f"Iteration {i}")
             print("x before conv:", x)
-            #print(x["x"].shape)
-            #print(edge_index[("x", "a", "c")].shape)
-            #print(edge_attr[("x", "a", "c")].shape)
+            print(x["c"].shape)
+            print(x["b"].shape)
+            print(x["x"].shape)
+            print(edge_index[("x", "a", "c")].shape)
+            print(edge_attr[("x", "a", "c")].shape)
             x = conv(x, edge_index, edge_attr)
             print("x after conv:", x)
             x = {key: fra.relu() for key, fra in x.items()}

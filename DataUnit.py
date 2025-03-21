@@ -73,7 +73,7 @@ class DataUnit(Dataset):
                     #data_i[("x_{}".format(i), "a_{0}_{1}".format(i,j), "c_{}".format(j))].edge_index = [[0,1], [1,0]]
                     #print("i: " + str(i) + "; j: " + str(j) +"  --- This is the data_i", data_i[("x_{}".format(i), "a_{0}_{1}".format(i,j), "c_{}".format(j))])
             
-            data_i[("x", "a", "c")].edge_attr = torch.tensor(edge_attr, dtype=torch.float).unsqueeze(1)
+            data_i[("x", "a", "c")].edge_attr = torch.tensor(edge_attr, dtype=torch.float).unsqueeze(0)
             data_i[("x", "a", "c")].edge_index = torch.tensor(edge_index, dtype=torch.long).t().contiguous()
             
             
@@ -85,7 +85,7 @@ class DataUnit(Dataset):
                 edge_index.append([i, i])
                 edge_attr.append(this_x[i, -1])
             
-            data_i[("c", "b", "b")].edge_attr = torch.tensor(edge_attr, dtype=torch.float).unsqueeze(1)
+            data_i[("c", "b", "b")].edge_attr = torch.tensor(edge_attr, dtype=torch.float).unsqueeze(0)
             data_i[("c", "b", "b")].edge_index = torch.tensor(edge_index, dtype=torch.long).t().contiguous()
             
             if debug:
@@ -96,6 +96,8 @@ class DataUnit(Dataset):
                 print("This is data_i[('c', 'b', 'b')]", data_i[("c", "b", "b")])
 
             converted_data.append(data_i)
+            return converted_data
+            
             #exit(0)
 
         #print("This is the converted_data: ", converted_data)

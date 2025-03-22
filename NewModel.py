@@ -11,6 +11,12 @@ class NewModel(torch.nn.Module):
         torch.manual_seed(seed)
         
         
+        #New tests
+        #V1: connessioni cicliche tra i nodi (stesso tipo di connessione)
+        #V2: connessioni acicliche tra i nodi. Rimetto manualmente b e x ad ogni convoluzione
+        #V3: connessioni acicliche tra i nodi. Metto i self loops
+        
+        
         # We need to use a convolutional layer to obtain the node embeddings (for the inhomogeneous case)
         # https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.conv.RGCNConv.html#torch_geometric.nn.conv.RGCNConv
         # https://pytorch-geometric.readthedocs.io/en/latest/get_started/introduction.html
@@ -20,7 +26,9 @@ class NewModel(torch.nn.Module):
         
         
         self.convs = torch.nn.ModuleList()
-        hidden_channels_linear = hidden_channels
+        #hidden_channels_linear = hidden_channels * 3 #3 is the number of different node types (v1)
+        #hidden_channels_linear = hidden_channels #3 is the number of different node types (v2)
+        hidden_channels_linear = hidden_channels *3 #3 is the number of different node types (v3)
         
         """
         #For H2:
@@ -37,10 +45,25 @@ class NewModel(torch.nn.Module):
             self.convs.append(conv)
         """
         
+        #New v1
+        """for _ in range(n_layers):
+            conv = HeteroConv({
+                ('x', 'a', 'c'):  ResGatedGraphConv((-1, -1), hidden_channels, edge_dim=1),
+                ('b', 'b', 'c'):  ResGatedGraphConv((-1, -1), hidden_channels, edge_dim=1),
+                
+                ('c', 'a', 'x'):  ResGatedGraphConv((-1, -1), hidden_channels, edge_dim=1),
+                ('c', 'b', 'b'):  ResGatedGraphConv((-1, -1), hidden_channels, edge_dim=1),
+                }, aggr='sum')
+            self.convs.append(conv)"""
+        
+        
+        #New v2
         for _ in range(n_layers):
             conv = HeteroConv({
                 ('x', 'a', 'c'):  ResGatedGraphConv((-1, -1), hidden_channels, edge_dim=1),
-                ('c', 'b', 'b'):  ResGatedGraphConv((-1, -1), hidden_channels, edge_dim=1),
+                ('b', 'b', 'c'):  ResGatedGraphConv((-1, -1), hidden_channels, edge_dim=1),
+                ('x', 'self_x', 'x'):  ResGatedGraphConv((-1, -1), hidden_channels, edge_dim=1),
+                ('b', 'self_b', 'b'):  ResGatedGraphConv((-1, -1), hidden_channels, edge_dim=1),
                 }, aggr='sum')
             self.convs.append(conv)
         
@@ -72,18 +95,23 @@ class NewModel(torch.nn.Module):
         edge_index[("c", "b", "b")] = edge_index[("c", "b", "b")][:6]"""
 
         i = 0
+        #original_x = copy.deepcopy(x) #V2
+        
         for conv in self.convs:
-            print(f"Iteration {i}")
+            #x["x"] = copy.deepcopy(original_x["x"]) #V2
+            #x["b"] = copy.deepcopy(original_x["b"]) #V2
+            
+            """print(f"Iteration {i}")
             print("x before conv:", x)
             print(x["c"].shape)
             print(x["b"].shape)
             print(x["x"].shape)
             print(edge_index[("x", "a", "c")].shape)
-            print(edge_attr[("x", "a", "c")].shape)
+            print(edge_attr[("x", "a", "c")].shape)"""
             x = conv(x, edge_index, edge_attr)
-            print("x after conv:", x)
+            #print("x after conv:", x)
             x = {key: fra.relu() for key, fra in x.items()}
-            print("x after ReLU:", x)
+            #print("x after ReLU:", x)
             i += 1
 
         mean_representation = []

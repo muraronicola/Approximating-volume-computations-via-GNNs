@@ -22,7 +22,7 @@ class DataUnit(Dataset):
     
     
     def new(self, x, y):
-        debug = True
+        debug = False
         converted_data = []
         
         for index in range(len(x)):
@@ -42,12 +42,22 @@ class DataUnit(Dataset):
             data_c = []
             data_b = []
             
+            
+            edge_x = []  #V3
+            edge_b = []
+            edge_attr_x = []
+            edge_attr_b = []
+            
             for i in range(this_x.shape[1]-1):
                 data_x.append(0)  #None?
+                edge_x.append([i, i])
+                edge_attr_x.append(0)  #None?
             
             for i in range(this_x.shape[0]):
                 data_c.append(0)  #None?
                 data_b.append(0)  #None?
+                edge_b.append([i, i])
+                edge_attr_b.append(0)  #None?
             
             
             data_x = torch.tensor(data_x, dtype=torch.float)
@@ -63,30 +73,51 @@ class DataUnit(Dataset):
             #Edges between dimentions and constraints
             edge_attr = []
             edge_index = []
+            edge_index_reverse = []
             
             for i in range(this_x.shape[1] - 1):
                 for j in range(this_x.shape[0]):
                     edge_index.append([i, j])
                     edge_attr.append(this_x[j, i])
+                    edge_index_reverse.append([j, i])
                     
                     #data_i[("x_{}".format(i), "a_{0}_{1}".format(i,j), "c_{}".format(j))].edge_attr = [this_x[j, i]]
                     #data_i[("x_{}".format(i), "a_{0}_{1}".format(i,j), "c_{}".format(j))].edge_index = [[0,1], [1,0]]
                     #print("i: " + str(i) + "; j: " + str(j) +"  --- This is the data_i", data_i[("x_{}".format(i), "a_{0}_{1}".format(i,j), "c_{}".format(j))])
             
-            data_i[("x", "a", "c")].edge_attr = torch.tensor(edge_attr, dtype=torch.float).unsqueeze(0)
+            data_i[("x", "a", "c")].edge_attr = torch.tensor(edge_attr, dtype=torch.float).unsqueeze(1)
             data_i[("x", "a", "c")].edge_index = torch.tensor(edge_index, dtype=torch.long).t().contiguous()
+            
+            #data_i[("c", "a", "x")].edge_attr = torch.tensor(edge_attr, dtype=torch.float).unsqueeze(1) #V1
+            #data_i[("c", "a", "x")].edge_index = torch.tensor(edge_index_reverse, dtype=torch.long).t().contiguous()
+            
             
             
             #Edges between constraints and b
             edge_attr = []
             edge_index = []
             
+            edge_attr.append(0)
+            edge_index.append([0,0])
+            
             for i in range(this_x.shape[0]):
                 edge_index.append([i, i])
                 edge_attr.append(this_x[i, -1])
             
-            data_i[("c", "b", "b")].edge_attr = torch.tensor(edge_attr, dtype=torch.float).unsqueeze(0)
-            data_i[("c", "b", "b")].edge_index = torch.tensor(edge_index, dtype=torch.long).t().contiguous()
+            data_i[("b", "b", "c")].edge_attr = torch.tensor(edge_attr, dtype=torch.float).unsqueeze(1)
+            data_i[("b", "b", "c")].edge_index = torch.tensor(edge_index, dtype=torch.long).t().contiguous()
+            
+            #data_i[("c", "b", "b")].edge_attr = torch.tensor(edge_attr, dtype=torch.float).unsqueeze(1)
+            #data_i[("c", "b", "b")].edge_index = torch.tensor(edge_index, dtype=torch.long).t().contiguous()
+            
+            
+            
+            data_i[("x", "self_x", "x")].edge_index = torch.tensor(edge_x, dtype=torch.long).t().contiguous()
+            data_i[("b", "self_b", "b")].edge_index = torch.tensor(edge_b, dtype=torch.long).t().contiguous()
+            
+            data_i[("x", "self_x", "x")].edge_attr = torch.tensor(edge_attr_x, dtype=torch.float).unsqueeze(1)
+            data_i[("b", "self_b", "b")].edge_attr = torch.tensor(edge_attr_b, dtype=torch.float).unsqueeze(1)
+            
             
             if debug:
                 debug = False
@@ -96,8 +127,6 @@ class DataUnit(Dataset):
                 print("This is data_i[('c', 'b', 'b')]", data_i[("c", "b", "b")])
 
             converted_data.append(data_i)
-            return converted_data
-            
             #exit(0)
 
         #print("This is the converted_data: ", converted_data)

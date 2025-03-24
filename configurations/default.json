@@ -30,7 +30,8 @@
         "loss": "l1",
         "dropout": 0.1,
         "hidden_channels": 16,
-        "n_layers": 3
+        "n_layers": 3,
+        "convolution_information": "edge_attr"
     }
 }
 

@@ -14,6 +14,14 @@ from tqdm import tqdm
 import os
 import copy
 
+
+def mean_relative_error(out, y):
+    error = 0
+    for i in range(len(out)):
+        error += abs(out[i] - y[i]) / y[i]
+    
+    return error / len(out)
+
 def r2_accuracy(pred_y, y):
     score = r2_score(y, pred_y)
     return round(score, 2)*100
@@ -40,7 +48,7 @@ def calculate_error(out, y):
     return error_global / len(out)
 
 
-def train(model, train_loader, optimizer, criterion, heterogeneus=False, new = False, device="cpu"):
+def train(model, train_loader, optimizer, criterion, heterogeneus=False, new = False, device="cpu", convolution_information="edge_attr"):
     model.train()
 
     loss_array = []
@@ -49,7 +57,10 @@ def train(model, train_loader, optimizer, criterion, heterogeneus=False, new = F
         
         if heterogeneus:
             if new:
-                out = model(data.x_dict, data.edge_index_dict, data.edge_attr_dict, data.batch_dict, train=False)
+                if convolution_information == "edge_attr":
+                    out = model(data.x_dict, data.edge_index_dict, data.edge_attr_dict, data.batch_dict, train=True)
+                else:
+                    out = model(data.x_dict, data.edge_index_dict, data.edge_weight_dict, data.batch_dict, train=False)
             else:
                 out = model(data.x_dict, data.edge_index_dict, data.batch_dict, train=False)
         else:
@@ -67,7 +78,7 @@ def train(model, train_loader, optimizer, criterion, heterogeneus=False, new = F
     return loss_array
 
 
-def evaluate(model, eval_loader, heterogeneus = False, new = False, device="cpu"):
+def evaluate(model, eval_loader, heterogeneus = False, new = False, device="cpu", convolution_information="edge_attr"):
     model.eval()
 
     with torch.no_grad():    
@@ -79,7 +90,10 @@ def evaluate(model, eval_loader, heterogeneus = False, new = False, device="cpu"
             
             if heterogeneus:
                 if new:
-                    out = model(data.x_dict, data.edge_index_dict, data.edge_attr_dict, data.batch_dict, train=False)
+                    if convolution_information == "edge_attr":
+                        out = model(data.x_dict, data.edge_index_dict, data.edge_attr_dict, data.batch_dict, train=True)
+                    else:
+                        out = model(data.x_dict, data.edge_index_dict, data.edge_weight_dict, data.batch_dict, train=False)
                 else:
                     out = model(data.x_dict, data.edge_index_dict, data.batch_dict, train=False)
             else:
@@ -100,7 +114,9 @@ def evaluate(model, eval_loader, heterogeneus = False, new = False, device="cpu"
     pred_mean = np.mean(array_pred)
     pred_std = np.std(array_pred)
     
-    return mse, mean_error, pred_mean, pred_std, array_y, array_pred
+    mean_rel_error = mean_relative_error(array_pred, array_y)
+    
+    return mse, mean_error, pred_mean, pred_std, array_y, array_pred, mean_rel_error
     
 
 def find_filename(base_filename):
@@ -173,6 +189,10 @@ def main():
     else:
         model = Homogeneus(node_features=node_features, hidden_channels=conf_train["hidden_channels"], p_drop=conf_train["dropout"]).to(device)
 
+
+    if conf_train["convolution_information"] != "edge_attr" and conf_train["convolution_information"] != "edge_weight":
+        raise ValueError("Invalid convolution information")
+
     optimizer = torch.optim.Adam(model.parameters(), lr=conf_train["learning_rate"])
     #optimizer = torch.optim.SGD(model.parameters(), lr=0.000005)
     
@@ -183,18 +203,18 @@ def main():
     else:
         raise ValueError("Loss not supported")
 
-    results = pd.DataFrame(columns=["epoch", "train_loss", "train_mse", "test_mse", "dev_mse", "mean_error_train", "mean_error_dev", "mean_error_test", "mean_pred_train", "mean_pred_dev", "mean_pred_test", "std_pred_train", "std_pred_dev", "std_pred_test"])
+    results = pd.DataFrame(columns=["epoch", "train_loss", "train_mse", "test_mse", "dev_mse", "mean_error_train", "mean_error_dev", "mean_error_test", "mean_rel_error_train", "mean_rel_error_dev", "mean_rel_error_test",  "mean_pred_train", "mean_pred_dev", "mean_pred_test", "std_pred_train", "std_pred_dev", "std_pred_test"])
     
     iterator = tqdm(range(1, conf_train["train_epochs"]+1))
     best_eval = 100000000
     best_epoch_eval = 0
     best_model = None
     for epoch in iterator:
-        loss = train(model, train_loader, optimizer, criterion, heterogeneus=conf_model["heterogeneus"], new=new, device=device)
+        loss = train(model, train_loader, optimizer, criterion, heterogeneus=conf_model["heterogeneus"], new=new, device=device, convolution_information=conf_train["convolution_information"])
         
-        train_mse, mean_error_train, mean_pred_train, std_pred_train, _, _ = evaluate(model, train_loader, heterogeneus=conf_model["heterogeneus"], new=new, device=device)
-        dev_mse, mean_error_dev, mean_pred_dev, std_pred_dev, _, _ = evaluate(model, dev_loader, heterogeneus=conf_model["heterogeneus"], new=new, device=device)
-        test_mse, mean_error_test, mean_pred_test, std_pred_test, _, _ = evaluate(model, test_loader, heterogeneus=conf_model["heterogeneus"], new=new, device=device)
+        train_mse, mean_error_train, mean_pred_train, std_pred_train, _, _, mean_rel_error_train = evaluate(model, train_loader, heterogeneus=conf_model["heterogeneus"], new=new, device=device, convolution_information=conf_train["convolution_information"])
+        dev_mse, mean_error_dev, mean_pred_dev, std_pred_dev, _, _, mean_rel_error_dev = evaluate(model, dev_loader, heterogeneus=conf_model["heterogeneus"], new=new, device=device, convolution_information=conf_train["convolution_information"])
+        test_mse, mean_error_test, mean_pred_test, std_pred_test, _, _, mean_rel_error_test = evaluate(model, test_loader, heterogeneus=conf_model["heterogeneus"], new=new, device=device, convolution_information=conf_train["convolution_information"])
         
         
         if conf_train["loss"] == "mse":
@@ -210,7 +230,7 @@ def main():
         if epoch - best_epoch_eval > conf_train["early_stopping"]:
             break
         
-        new_data = pd.DataFrame([[epoch, np.mean(loss), train_mse, test_mse, dev_mse, mean_error_train, mean_error_dev, mean_error_test, mean_pred_train, mean_pred_dev, mean_pred_test, std_pred_train, std_pred_dev, std_pred_test]], columns=["epoch", "train_loss", "train_mse", "test_mse", "dev_mse", "mean_error_train", "mean_error_dev", "mean_error_test", "mean_pred_train", "mean_pred_dev", "mean_pred_test", "std_pred_train", "std_pred_dev", "std_pred_test"])
+        new_data = pd.DataFrame([[epoch, np.mean(loss), train_mse, test_mse, dev_mse, mean_error_train, mean_error_dev, mean_error_test, mean_rel_error_train, mean_rel_error_dev, mean_rel_error_test, mean_pred_train, mean_pred_dev, mean_pred_test, std_pred_train, std_pred_dev, std_pred_test]], columns=["epoch", "train_loss", "train_mse", "test_mse", "dev_mse", "mean_error_train", "mean_error_dev", "mean_error_test", "mean_rel_error_train", "mean_rel_error_dev", "mean_rel_error_test", "mean_pred_train", "mean_pred_dev", "mean_pred_test", "std_pred_train", "std_pred_dev", "std_pred_test"])
         results = pd.concat([results, new_data])
         
         iterator.set_description(f'Train mean loss: { np.mean(loss):.4f}')
@@ -249,19 +269,19 @@ def main():
     
     
     
-    _, _, _, _, y, y_pred = evaluate(model, train_loader, heterogeneus=conf_model["heterogeneus"], new=new, device=device)
+    _, _, _, _, y, y_pred, _ = evaluate(model, train_loader, heterogeneus=conf_model["heterogeneus"], new=new, device=device, convolution_information=conf_train["convolution_information"])
     train_predictions = pd.DataFrame(columns=["y", "y_pred"])
     train_predictions["y"] = y
     train_predictions["y_pred"] = y_pred
     train_predictions.to_csv("./runs/" + file_name + "_train_predictions.csv")
     
-    _, _, _, _, y, y_pred = evaluate(model, dev_loader, heterogeneus=conf_model["heterogeneus"], new=new, device=device)
+    _, _, _, _, y, y_pred, _ = evaluate(model, dev_loader, heterogeneus=conf_model["heterogeneus"], new=new, device=device, convolution_information=conf_train["convolution_information"])
     dev_predictions = pd.DataFrame(columns=["y", "y_pred"])
     dev_predictions["y"] = y
     dev_predictions["y_pred"] = y_pred
     dev_predictions.to_csv("./runs/" + file_name + "_dev_predictions.csv")
     
-    _, _, _, _, y, y_pred = evaluate(model, test_loader, heterogeneus=conf_model["heterogeneus"], new=new, device=device)
+    _, _, _, _, y, y_pred, _ = evaluate(model, test_loader, heterogeneus=conf_model["heterogeneus"], new=new, device=device, convolution_information=conf_train["convolution_information"])
     test_predictions = pd.DataFrame(columns=["y", "y_pred"])
     test_predictions["y"] = y
     test_predictions["y_pred"] = y_pred

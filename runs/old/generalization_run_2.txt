@@ -1,7 +1,8 @@
 {
 'device': 'cuda:0',
+'base_filename': 'generalization',
 'data': {
-'max_samples': 1000000,
+'max_samples': 10000,
 'base_path': './data/',
 'exact_polytopes': True,
 'train-test-separation': False,
@@ -15,9 +16,13 @@ False],
 3],
 'train-data': None,
 'test-data': None,
-'normalize': True,
-'conversion': 'constraints',
+'normalize': False,
+'conversion': 'h2',
 'cutoff': 10000
+},
+'model': {
+'heterogeneus': True,
+'n_releations': 3
 },
 'train': {
 'train_batch_size': 2048,
@@ -27,6 +32,7 @@ False],
 'learning_rate': 0.0005,
 'loss': 'l1',
 'dropout': 0.1,
-'hidden_channels': 16
+'hidden_channels': 16,
+'n_layers': 3
 }
 }

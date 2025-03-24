@@ -1,6 +1,5 @@
 {
 'device': 'cuda:0',
-'base_filename': 'encoding',
 'data': {
 'max_samples': 10000,
 'base_path': './data/',
@@ -15,12 +14,9 @@
 'train-data': None,
 'test-data': None,
 'normalize': False,
-'conversion': 'new',
+'conversion': 'constraints',
+'heterogeneus': False,
 'cutoff': 10000
-},
-'model': {
-'heterogeneus': True,
-'n_releations': 3
 },
 'train': {
 'train_batch_size': 2048,
@@ -30,8 +26,6 @@
 'learning_rate': 0.0005,
 'loss': 'l1',
 'dropout': 0.1,
-'hidden_channels': 16,
-'n_layers': 3,
-'convolution_information': 'edge_weight'
+'hidden_channels': 16
 }
 }

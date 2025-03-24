@@ -113,7 +113,6 @@ class Heterogeneus(torch.nn.Module):
                 }, aggr='sum')
                 self.convs.append(conv)
             """
-                    
 
 
         #For H2 (old old version):

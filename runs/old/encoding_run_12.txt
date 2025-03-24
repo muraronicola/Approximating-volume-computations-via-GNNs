@@ -2,7 +2,7 @@
 'device': 'cuda:0',
 'base_filename': 'encoding',
 'data': {
-'max_samples': 10000,
+'max_samples': 100,
 'base_path': './data/',
 'exact_polytopes': True,
 'train-test-separation': False,
@@ -31,7 +31,6 @@
 'loss': 'l1',
 'dropout': 0.1,
 'hidden_channels': 16,
-'n_layers': 3,
-'convolution_information': 'edge_weight'
+'n_layers': 3
 }
 }

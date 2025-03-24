@@ -3,3 +3,4 @@
 /data/**/all_polytopes_y.npy
 /data/**/all_polytopes_x.npy
 /runs/**/*.png
+*.pt

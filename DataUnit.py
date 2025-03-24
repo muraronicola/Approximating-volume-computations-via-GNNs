@@ -85,11 +85,13 @@ class DataUnit(Dataset):
                     #data_i[("x_{}".format(i), "a_{0}_{1}".format(i,j), "c_{}".format(j))].edge_index = [[0,1], [1,0]]
                     #print("i: " + str(i) + "; j: " + str(j) +"  --- This is the data_i", data_i[("x_{}".format(i), "a_{0}_{1}".format(i,j), "c_{}".format(j))])
             
-            data_i[("x", "a", "c")].edge_attr = torch.tensor(edge_attr, dtype=torch.float).unsqueeze(1)
+            data_i[("x", "a", "c")].edge_attr = torch.tensor(edge_attr, dtype=torch.float).unsqueeze(1) #ResGatedGraphConv
+            #data_i[("x", "a", "c")].edge_weight = torch.tensor(edge_attr, dtype=torch.float).unsqueeze(1) #GraphConv
             data_i[("x", "a", "c")].edge_index = torch.tensor(edge_index, dtype=torch.long).t().contiguous()
             
-            #data_i[("c", "a", "x")].edge_attr = torch.tensor(edge_attr, dtype=torch.float).unsqueeze(1) #V1
-            #data_i[("c", "a", "x")].edge_index = torch.tensor(edge_index_reverse, dtype=torch.long).t().contiguous()
+            data_i[("c", "a", "x")].edge_attr = torch.tensor(edge_attr, dtype=torch.float).unsqueeze(1) #V1
+            #data_i[("c", "a", "x")].edge_weight = torch.tensor(edge_attr, dtype=torch.float).unsqueeze(1) #GraphConv
+            data_i[("c", "a", "x")].edge_index = torch.tensor(edge_index_reverse, dtype=torch.long).t().contiguous() #V1
             
             
             
@@ -105,18 +107,20 @@ class DataUnit(Dataset):
                 edge_attr.append(this_x[i, -1])
             
             data_i[("b", "b", "c")].edge_attr = torch.tensor(edge_attr, dtype=torch.float).unsqueeze(1)
+            #data_i[("b", "b", "c")].edge_weight = torch.tensor(edge_attr, dtype=torch.float).unsqueeze(1) #GraphConv
             data_i[("b", "b", "c")].edge_index = torch.tensor(edge_index, dtype=torch.long).t().contiguous()
             
-            #data_i[("c", "b", "b")].edge_attr = torch.tensor(edge_attr, dtype=torch.float).unsqueeze(1)
-            #data_i[("c", "b", "b")].edge_index = torch.tensor(edge_index, dtype=torch.long).t().contiguous()
+            data_i[("c", "b", "b")].edge_attr = torch.tensor(edge_attr, dtype=torch.float).unsqueeze(1) #V1
+            #data_i[("c", "b", "b")].edge_weight = torch.tensor(edge_attr, dtype=torch.float).unsqueeze(1) #V1 GraphConv
+            data_i[("c", "b", "b")].edge_index = torch.tensor(edge_index, dtype=torch.long).t().contiguous() #V1
             
             
             
-            data_i[("x", "self_x", "x")].edge_index = torch.tensor(edge_x, dtype=torch.long).t().contiguous()
-            data_i[("b", "self_b", "b")].edge_index = torch.tensor(edge_b, dtype=torch.long).t().contiguous()
+            #data_i[("x", "self_x", "x")].edge_index = torch.tensor(edge_x, dtype=torch.long).t().contiguous() #V3
+            #data_i[("b", "self_b", "b")].edge_index = torch.tensor(edge_b, dtype=torch.long).t().contiguous() #V3
             
-            data_i[("x", "self_x", "x")].edge_attr = torch.tensor(edge_attr_x, dtype=torch.float).unsqueeze(1)
-            data_i[("b", "self_b", "b")].edge_attr = torch.tensor(edge_attr_b, dtype=torch.float).unsqueeze(1)
+            #data_i[("x", "self_x", "x")].edge_attr = torch.tensor(edge_attr_x, dtype=torch.float).unsqueeze(1) #V3
+            #data_i[("b", "self_b", "b")].edge_attr = torch.tensor(edge_attr_b, dtype=torch.float).unsqueeze(1) #V3
             
             
             if debug:

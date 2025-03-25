@@ -2,7 +2,7 @@
     "device": "cuda:0",
     "base_filename": "demo",
     "data": {
-        "max_samples": 100,
+        "max_samples": 10000,
         "base_path": "./data/",
         "exact_polytopes": true,
         "train-test-separation" : false,

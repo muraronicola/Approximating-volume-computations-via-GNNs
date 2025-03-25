@@ -197,9 +197,6 @@ def main():
     model = torch.load("./runs/" + model_name + ".pt", weights_only=False)
     model.to(device)
     
-    print("Model loaded")
-    print(model_name)
-    print(model)
     train_mse, mean_error_train, mean_pred_train, std_pred_train, _, _, mean_rel_error_train = evaluate(model, train_loader, heterogeneus=conf_model["heterogeneus"], new=new, device=device, convolution_information=conf_train["convolution_information"])
     
     results = pd.DataFrame(columns=["epoch", "train_loss", "train_mse", "test_mse", "dev_mse", "mean_error_train", "mean_error_dev", "mean_error_test", "mean_rel_error_train", "mean_rel_error_dev", "mean_rel_error_test",  "mean_pred_train", "mean_pred_dev", "mean_pred_test", "std_pred_train", "std_pred_dev", "std_pred_test"])

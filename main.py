@@ -226,6 +226,7 @@ def main():
             if mean_error_dev < best_eval:
                 best_eval = mean_error_dev
                 best_epoch_eval = epoch
+                best_model = copy.deepcopy(model)
         
         if epoch - best_epoch_eval > conf_train["early_stopping"]:
             break
@@ -237,6 +238,7 @@ def main():
 
     results.to_csv("./runs/" + file_name + ".csv")
     torch.save(best_model, "./runs/" + file_name + ".pt")
+    torch.save(best_model.state_dict(), "./runs/" + file_name + "_state_dict.pt")
     
     figure2, ax2 = plt.subplots(5, 3, figsize=(18, 20))
 

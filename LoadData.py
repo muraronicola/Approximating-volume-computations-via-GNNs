@@ -69,6 +69,10 @@ class LoadData():
     def get_dataloaders(self, dev_split_size=0.2, test_split_size=0.2, train_batch_size=16, eval_batch_size=32, normalize=False, conversions="constraints", n_max_samples=100000, only_inference=False):
         du_train, du_dev, du_test = self.get_data(dev_split_size, test_split_size, normalize, conversions, n_max_samples, only_inference)
         
+        if only_inference:
+            train_loader = DataLoader(du_train, batch_size=train_batch_size, shuffle=False)
+            return train_loader, None, None
+        
         train_loader = DataLoader(du_train, batch_size=train_batch_size, shuffle=False)
         dev_loader = DataLoader(du_dev, batch_size=eval_batch_size, shuffle=False)
         test_loader = DataLoader(du_test, batch_size=eval_batch_size, shuffle=False)
@@ -88,7 +92,7 @@ class LoadData():
         self.y_train = self.y_train[:n_max_samples]
         
         if only_inference:
-            x_train = self.x_test
+            x_train = self.x_train
             y_train = self.y_train
         else:
             if self.y_test.size == 0:
@@ -113,7 +117,12 @@ class LoadData():
             x_test = scaler.transform(x_test.reshape(-1, x_test.shape[-1])).reshape(x_test.shape)
         
         du_train = du.DataUnit(x_train, y_train, conversion=conversions)
-        du_dev = du.DataUnit(x_dev, y_dev, conversion=conversions)
-        du_test = du.DataUnit(x_test, y_test, conversion=conversions)
+        du_dev = None
+        du_test = None
+        
+        
+        if not only_inference:
+            du_dev = du.DataUnit(x_dev, y_dev, conversion=conversions)
+            du_test = du.DataUnit(x_test, y_test, conversion=conversions)
         
         return du_train, du_dev, du_test

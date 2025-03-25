@@ -1,8 +1,8 @@
 {
     "device": "cuda:0",
-    "base_filename": "encoding",
+    "base_filename": "demo",
     "data": {
-        "max_samples": 10000,
+        "max_samples": 100,
         "base_path": "./data/",
         "exact_polytopes": true,
         "train-test-separation" : false,

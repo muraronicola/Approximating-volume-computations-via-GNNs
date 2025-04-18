@@ -1,0 +1,2 @@
+,epoch,train_loss,train_mse,test_mse,dev_mse,mean_error_train,mean_error_dev,mean_error_test,mean_rel_error_train,mean_rel_error_dev,mean_rel_error_test,mean_pred_train,mean_pred_dev,mean_pred_test,std_pred_train,std_pred_dev,std_pred_test
+0,0,0,28505.389841412514,0,0,139.82535462379457,0,0,2.143741772690303,0,0,354.99567306518554,0,0,60.88671829529707,0,0

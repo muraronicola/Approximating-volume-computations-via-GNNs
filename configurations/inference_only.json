@@ -8,9 +8,9 @@
         "train-test-separation" : false,
         "train-test-split" : 0.2,
         "train-eval-split" : 0.2,
-        "train-test-data" : ["m_3_r_2"],
+        "train-test-data" : ["m_5_r_3"],
         "train-test-data-train": [true],
-        "target_shape": [3, 2],
+        "target_shape": [5, 3],
         "normalize": false,
         "conversion": "new",
         "cutoff": 10000

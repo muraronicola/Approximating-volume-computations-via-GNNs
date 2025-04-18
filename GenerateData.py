@@ -21,6 +21,7 @@ def is_bounded(A, b):
             break
     """
     
+    n = A.shape[1]
     #is_ok = True
     c = np.full(n, -1)
     res = linprog(c, A_ub=A, b_ub=b, bounds=(None, None))
@@ -37,7 +38,7 @@ def is_bounded(A, b):
         is_ok = False
     
     #print("--------------------")
-    return  is_ok
+    return True
 
 def generate_polytope(rng, m=4, r=3):
     #Ax <= b
@@ -46,12 +47,24 @@ def generate_polytope(rng, m=4, r=3):
     
     x0 = np.full(r, 1)
     A = rng.uniform(-10, 10, (m, r))
-    b = A @ x0
-    b += rng.uniform(1, 40, m) #Era 1, 30, m
+    exact_b = A @ x0
+    b = exact_b + rng.uniform(1, 40, m) #Era 1, 30, m
     
     is_valid = is_bounded(A, b)
     
-    return is_valid, A, b
+    return is_valid, A, b, exact_b
+
+
+def adjust_polytope(rng, exact_b, m, increase_volume, iteration=1):
+    
+    if increase_volume:
+        b = exact_b + rng.uniform(1, 40 + (5*iteration) , m)
+    else:
+        b = exact_b + rng.uniform(1, 40 - (5*iteration) , m)
+        
+    print("adjusting polytope, iteration", iteration)
+    
+    return b
 
 
 def check_exact_polytope(original_volume, A, b, m): #Check if all the constraints are useful
@@ -92,7 +105,7 @@ def generate_n_polytopes(n_polytopes, base_path="./data/", seed=0, m=4, r=3, sav
             if (volume_counter == target_volume).all():
                 break
         
-        is_valid, A, b = generate_polytope(rng, m=m, r=r)
+        is_valid, A, b, exact_b = generate_polytope(rng, m=m, r=r)
         
         if is_valid:
             polytope = Polytope(A=A, b=b)
@@ -112,10 +125,42 @@ def generate_n_polytopes(n_polytopes, base_path="./data/", seed=0, m=4, r=3, sav
             if check_exact_polytope(volume, A, b, m):
                 if uniform:
                     if volume >= max_volume:
-                        continue
+                        
+                        it = 1
+                        ok = False
+                        while it < 5 and not ok:
+                            b = adjust_polytope(rng, exact_b, m, increase_volume=False, iteration=it)
+                            polytope = Polytope(A=A, b=b)
+                            try:
+                                volume = polytope.volume()
+                                ok = True
+                            except:
+                                pass
+                            
+                            it += 1
+
+                        if not ok:
+                            print("Error in volume calculation, not enough points")
+                            continue
+                        
                     
                     if volume_counter[round(volume/discretization_step) - 1] >= target_volume:
-                        continue
+                        it = 1
+                        ok = False
+                        while it < 5 and not ok:
+                            b = adjust_polytope(rng, exact_b, m, increase_volume=False, iteration=it)
+                            polytope = Polytope(A=A, b=b)
+                            try:
+                                volume = polytope.volume()
+                                ok = True
+                            except:
+                                pass
+                            
+                            it += 1
+
+                        if not ok:
+                            print("Error in volume calculation, not enough points")
+                            continue
                 
                 if r <= 3 and save_images:
                     plot_polytope(polytope, save=save_images, show=False, filename=path + "politope_" + str(i) + ".png")

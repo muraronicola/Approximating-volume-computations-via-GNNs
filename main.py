@@ -1,3 +1,4 @@
+from utils import mean_relative_error, mean_squared_error, mean_absolute_error, find_filename
 import torch
 from LoadData import LoadData
 import configurations.configurations as conf
@@ -5,7 +6,6 @@ import argparse
 from Heterogeneus_model import Heterogeneus
 from Homogeneus_model import Homogeneus
 from NewModel import NewModel
-from sklearn.metrics import r2_score
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -15,101 +15,48 @@ import os
 import copy
 
 
-def mean_relative_error(out, y):
-    error = 0
-    for i in range(len(out)):
-        error += abs(out[i] - y[i]) / y[i]
-    
-    return error / len(out)
 
-def r2_accuracy(pred_y, y):
-    score = r2_score(y, pred_y)
-    return round(score, 2)*100
-
-def calculate_se(out, y):
-    se_global = 0
-    
-    for i in range(len(out)):
-        se = (out[i] - y[i])**2
-        se_global += se
-        
-        #print(out[i], y[i], mse)
-        #print("+++++")
-    
-    return se_global / len(out)
-
-def calculate_error(out, y):
-    error_global = 0
-    
-    for i in range(len(out)):
-        error = abs(out[i] - y[i])
-        error_global += error
-    
-    return error_global / len(out)
-
-
-def train(model, train_loader, optimizer, criterion, heterogeneus=False, new = False, device="cpu", convolution_information="edge_attr"):
+def train(model, train_loader, optimizer, loss_function, device="cpu"):
     model.train()
 
     loss_array = []
     for data in train_loader: 
         data.to(device)
         
-        if heterogeneus:
-            if new:
-                if convolution_information == "edge_attr":
-                    out = model(data.x_dict, data.edge_index_dict, data.edge_attr_dict, data.batch_dict, train=True)
-                else:
-                    out = model(data.x_dict, data.edge_index_dict, data.edge_weight_dict, data.batch_dict, train=False)
-            else:
-                out = model(data.x_dict, data.edge_index_dict, data.batch_dict, train=False)
-        else:
-            out = model(data.x, data.edge_index, data.batch, train=False) 
+        out = model(data.x_dict, data.edge_index_dict, data.edge_attr_dict, data.batch_dict, train=True)
         
-        loss = criterion(out, data.y) 
+        loss = loss_function(out, data.y) 
         loss_array.append(loss.item())
+        
+        data.to("cpu")
         
         loss.backward()
         optimizer.step()
         optimizer.zero_grad()
     
-    #print("Loss: ", loss.item())
-    #print("out: ", out.detach().cpu().numpy()[0])
     return loss_array
 
 
 def evaluate(model, eval_loader, heterogeneus = False, new = False, device="cpu", convolution_information="edge_attr"):
     model.eval()
+    
+    pred_mean = 0
+    array_pred = np.empty(0)
+    array_y = np.empty(0)
 
     with torch.no_grad():    
-        pred_mean = 0
-        array_pred = np.empty(0)
-        array_y = np.empty(0)
         for data in eval_loader:
             data.to(device)
             
-            if heterogeneus:
-                if new:
-                    if convolution_information == "edge_attr":
-                        out = model(data.x_dict, data.edge_index_dict, data.edge_attr_dict, data.batch_dict, train=True)
-                    else:
-                        out = model(data.x_dict, data.edge_index_dict, data.edge_weight_dict, data.batch_dict, train=False)
-                else:
-                    out = model(data.x_dict, data.edge_index_dict, data.batch_dict, train=False)
-            else:
-                out = model(data.x, data.edge_index, data.batch, train=False) 
-                
-            #print("out: ", flatten_out)
-            #print("out: ", flatten_out.detach().cpu().numpy())
-            #print("data: ", data.y.detach().cpu().numpy())
+            out = model(data.x_dict, data.edge_index_dict, data.edge_attr_dict, data.batch_dict, train=True)
             
-            #print(out[0], data.y[0], this_mse)
-            #pred_sum += np.sum(np.array(out.detach().cpu().numpy()))
             array_pred = np.concatenate((array_pred, out.detach().cpu().numpy().flatten()), axis=None)
             array_y = np.concatenate((array_y, data.y.detach().cpu().numpy().flatten()), axis=None)
+            
+            data.to("cpu")
     
-    mse = calculate_se(array_pred, array_y)
-    mean_error = calculate_error(array_pred, array_y)
+    mse = mean_squared_error(array_pred, array_y)
+    mean_error = mean_absolute_error(array_pred, array_y)
     
     pred_mean = np.mean(array_pred)
     pred_std = np.std(array_pred)
@@ -119,17 +66,8 @@ def evaluate(model, eval_loader, heterogeneus = False, new = False, device="cpu"
     return mse, mean_error, pred_mean, pred_std, array_y, array_pred, mean_rel_error
     
 
-def find_filename(base_filename):
-    i = 1
-    while True:
-        file_name = base_filename + "_" + "run" + "_" + str(i)
-        if not os.path.exists("./runs/" + file_name + ".csv"):
-            return file_name
-        i += 1
 
 def main():
-    seed = 0
-
     parser = argparse.ArgumentParser()
     parser.add_argument("-path_configuration", type=str, default="./configurations/default.json", help="specify the path to the configuration file")
 
@@ -142,7 +80,7 @@ def main():
     file_name = find_filename(base_filename)
     print("Saving results in: ", file_name)
     
-    rng = np.random.default_rng(seed)
+    rng = np.random.default_rng(int(configuration["seed"]))
     
     device = configuration["device"]
 
@@ -268,7 +206,6 @@ def main():
 
     figure2.tight_layout()
     figure2.savefig("./runs/" + file_name + ".png")
-    
     
     
     _, _, _, _, y, y_pred, _ = evaluate(model, train_loader, heterogeneus=conf_model["heterogeneus"], new=new, device=device, convolution_information=conf_train["convolution_information"])

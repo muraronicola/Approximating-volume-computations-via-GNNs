@@ -33,26 +33,11 @@ class LoadData():
         return x 
 
 
-    def add_dataset(self, folder_name, train_data=True, cutoff=-1): #I can train on r3 and test on r4. Right now i can't train on r4 and r3
+    def add_dataset(self, folder_name, train_data=True): #I can train on r3 and test on r4. Right now i can't train on r4 and r3
         x = np.load(self.base_path + folder_name + self.file_name + "_x.npy", allow_pickle=True)
         y = np.load(self.base_path + folder_name + self.file_name+ "_y.npy", allow_pickle=True)
         
-        x = self.convert_to_target_shape(x)
-        #x[:,:,-1] = x[:,:,-1]*-1 #b should be negative
-        
-        if cutoff > 0:
-            #remove all the samples that have a value higher than the cutoff
-            mask = y < cutoff
-            x = x[mask]
-            y = y[mask]
-        
-        
-        """print("self.x_train.shape", self.x_train.shape)
-        print("x.shape", x.shape)
-        
-        print("self.y_train.shape", self.y_train.shape)
-        print("y.shape", y.shape)"""
-        
+        #x = self.convert_to_target_shape(x)
         
         if train_data:
             self.x_train = np.concatenate((self.x_train, x)) 
@@ -81,7 +66,6 @@ class LoadData():
     
     
     def get_data(self, dev_split_size=0.2, test_split_size=0.2, normalize=False, conversions="constraints", n_max_samples=100000, only_inference=False):
-        
         
         #Shuffle the data
         p = self.rng.permutation(len(self.x_train))
@@ -119,7 +103,6 @@ class LoadData():
         du_train = du.DataUnit(x_train, y_train, conversion=conversions)
         du_dev = None
         du_test = None
-        
         
         if not only_inference:
             du_dev = du.DataUnit(x_dev, y_dev, conversion=conversions)

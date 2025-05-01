@@ -5,23 +5,8 @@ from torch.utils.data import Dataset
 from torch_geometric.data import Data, HeteroData
 
 class DataUnit(Dataset):
-    def __init__(self, x, y, conversion="constraints"):
+    def __init__(self, x, y):
 
-        if conversion != "constraints" and conversion != "dimensions" and conversion != "h1" and conversion != "h2" and conversion != "new":
-            raise ValueError("Invalid conversion type")
-        
-        if conversion == "constraints" or conversion == "dimensions":
-            self.data = self.convert_data(x, y, conversion)
-        elif conversion == "h1":
-            self.data = self.h1(x, y)
-        elif conversion == "h2":
-            self.data = self.h2(x, y)
-        elif conversion == "new":
-            self.data = self.new(x, y)
-    
-    
-    
-    def new(self, x, y):
         debug = False
         converted_data = []
         
@@ -42,23 +27,12 @@ class DataUnit(Dataset):
             data_c = []
             data_b = []
             
-            
-            edge_x = []  #V3
-            edge_b = []
-            edge_attr_x = []
-            edge_attr_b = []
-            
             for i in range(this_x.shape[1]-1):
                 data_x.append(0)  #None?
-                edge_x.append([i, i])
-                edge_attr_x.append(0)  #None?
             
             for i in range(this_x.shape[0]):
                 data_c.append(0)  #None?
                 data_b.append(0)  #None?
-                edge_b.append([i, i])
-                edge_attr_b.append(0)  #None?
-            
             
             data_x = torch.tensor(data_x, dtype=torch.float)
             data_i["x"].x = data_x.unsqueeze(1)
@@ -68,6 +42,7 @@ class DataUnit(Dataset):
             
             data_b = torch.tensor(data_b, dtype=torch.float)
             data_i["b"].x = data_b.unsqueeze(1)
+            
             
             
             #Edges between dimentions and constraints
@@ -80,17 +55,11 @@ class DataUnit(Dataset):
                     edge_index.append([i, j])
                     edge_attr.append(this_x[j, i])
                     edge_index_reverse.append([j, i])
-                    
-                    #data_i[("x_{}".format(i), "a_{0}_{1}".format(i,j), "c_{}".format(j))].edge_attr = [this_x[j, i]]
-                    #data_i[("x_{}".format(i), "a_{0}_{1}".format(i,j), "c_{}".format(j))].edge_index = [[0,1], [1,0]]
-                    #print("i: " + str(i) + "; j: " + str(j) +"  --- This is the data_i", data_i[("x_{}".format(i), "a_{0}_{1}".format(i,j), "c_{}".format(j))])
             
             data_i[("x", "a", "c")].edge_attr = torch.tensor(edge_attr, dtype=torch.float).unsqueeze(1) #ResGatedGraphConv
-            #data_i[("x", "a", "c")].edge_weight = torch.tensor(edge_attr, dtype=torch.float).unsqueeze(1) #GraphConv
             data_i[("x", "a", "c")].edge_index = torch.tensor(edge_index, dtype=torch.long).t().contiguous()
             
             data_i[("c", "a", "x")].edge_attr = torch.tensor(edge_attr, dtype=torch.float).unsqueeze(1) #V1
-            #data_i[("c", "a", "x")].edge_weight = torch.tensor(edge_attr, dtype=torch.float).unsqueeze(1) #GraphConv
             data_i[("c", "a", "x")].edge_index = torch.tensor(edge_index_reverse, dtype=torch.long).t().contiguous() #V1
             
             
@@ -107,21 +76,10 @@ class DataUnit(Dataset):
                 edge_attr.append(this_x[i, -1])
             
             data_i[("b", "b", "c")].edge_attr = torch.tensor(edge_attr, dtype=torch.float).unsqueeze(1)
-            #data_i[("b", "b", "c")].edge_weight = torch.tensor(edge_attr, dtype=torch.float).unsqueeze(1) #GraphConv
             data_i[("b", "b", "c")].edge_index = torch.tensor(edge_index, dtype=torch.long).t().contiguous()
             
             data_i[("c", "b", "b")].edge_attr = torch.tensor(edge_attr, dtype=torch.float).unsqueeze(1) #V1
-            #data_i[("c", "b", "b")].edge_weight = torch.tensor(edge_attr, dtype=torch.float).unsqueeze(1) #V1 GraphConv
             data_i[("c", "b", "b")].edge_index = torch.tensor(edge_index, dtype=torch.long).t().contiguous() #V1
-            
-            
-            
-            #data_i[("x", "self_x", "x")].edge_index = torch.tensor(edge_x, dtype=torch.long).t().contiguous() #V3
-            #data_i[("b", "self_b", "b")].edge_index = torch.tensor(edge_b, dtype=torch.long).t().contiguous() #V3
-            
-            #data_i[("x", "self_x", "x")].edge_attr = torch.tensor(edge_attr_x, dtype=torch.float).unsqueeze(1) #V3
-            #data_i[("b", "self_b", "b")].edge_attr = torch.tensor(edge_attr_b, dtype=torch.float).unsqueeze(1) #V3
-            
             
             if debug:
                 debug = False
@@ -131,322 +89,7 @@ class DataUnit(Dataset):
                 print("This is data_i[('c', 'b', 'b')]", data_i[("c", "b", "b")])
 
             converted_data.append(data_i)
-            #exit(0)
-
-        #print("This is the converted_data: ", converted_data)
         
-        return converted_data
-    
-    def h1(self, x, y):
-        #I coefficienti hanno lo stesso tipo per lo stesso constraint
-        
-        debug = False
-        converted_data = []
-        
-        for index in range(len(x)):
-            this_x = x[index]
-            this_y = y[index]
-            
-            if debug:
-                print("\n\n")
-                print("This is the x: ", this_x)
-                print("This is the y: ", this_y)
-            
-            torch_y = torch.tensor(this_y, dtype=torch.float)
-            data_i = HeteroData(y=torch_y)
-            
-            #data_a = torch.tensor(this_x[:, :-1].astype('float64'), dtype=torch.float)
-            data_a = []
-            for i in range(this_x.shape[0]):
-                data_a.append([])
-                
-                for j in range(this_x.shape[1] - 1):
-                    data_a[i].append(this_x[i, j])
-            
-            for i in range(len(data_a)):
-                data_one_dimention = torch.tensor(data_a[i], dtype=torch.float)
-                data_i['a_{}'.format(i)].x = data_one_dimention.unsqueeze(1)
-            
-            data_b = torch.tensor(this_x[:, -1].astype('float64'), dtype=torch.float)
-            data_i['b'].x = data_b.unsqueeze(1)
-
-            
-            #Edges between same dimension
-            edge_between_same_dim = []
-            
-
-            edge_between_same_dim = []
-            for i in range(this_x.shape[1] - 1):
-                edge_between_same_dim.append([i, i])
-            
-            for i in range(this_x.shape[0]):
-                for j in range(this_x.shape[0]):
-                    if i != j:
-                        edge_index = torch.tensor(edge_between_same_dim, dtype=torch.long).t().contiguous()
-                        data_i['a_{}'.format(i), "a_columns", 'a_{}'.format(j)].edge_index = edge_index
-            
-            
-            for i in range(this_x.shape[0]):
-                edge_index_a_b = []
-                for j in range(this_x.shape[1] - 1):
-                    edge_index_a_b.append([j, i])
-                
-                edge_index_a_b = torch.tensor(edge_index_a_b, dtype=torch.long).t().contiguous()
-                data_i['a_{}'.format(i), "a_b", 'b'].edge_index = edge_index_a_b
-            
-            
-            edge_between_b = []
-            for i in range(this_x.shape[0]):
-                for j in range(this_x.shape[0]):
-                    if i != j:
-                        edge_between_b.append([i, j])
-            
-            data_i['b', 'b', 'b'].edge_index = torch.tensor(edge_between_b, dtype=torch.long).t().contiguous()
-            
-            
-            """data_edge_a_a_rows = []
-            for i in range(this_x.shape[1] - 1):
-                data_edge_a_a_rows.append([i, i])
-            print("This is the data_edge_a_a_rows: ", data_edge_a_a_rows)"""
-            
-            data_edge_a_a_rows = []
-            
-            for i in range(this_x.shape[1]-1):
-                for j in range(this_x.shape[1]-1):
-                    if i != j:
-                        data_edge_a_a_rows.append([i, j])
-            
-            for i in range(this_x.shape[0]):
-                edge_index = torch.tensor(data_edge_a_a_rows, dtype=torch.long).t().contiguous()
-                data_i['a_{}'.format(i), "a_row", 'a_{}'.format(i)].edge_index = edge_index
-    
-            if debug:
-                debug = False
-                print("This is the data_i: ", data_i)
-                print("This is the data_i['a_0']: ", data_i['a_0'])
-                print("This is the data_i['a_1']: ", data_i['a_1'])
-                print("This is the data_i['b']: ", data_i['b'])
-                print("This is the data_i['a_0', 'a_columns_0, 'a_1']: ", data_i['a_0', 'a_columns_0', 'a_1'])
-                print("This is the data_i['b', 'b', 'b']: ", data_i['b', 'b', 'b'])
-                print("This is the data_i['a_0', 'a_b_0', 'b']: ", data_i['a_0', 'a_b_0', 'b'])
-                print("This is the data_i['a_1', 'a_b_1', 'b']: ", data_i['a_1', 'a_b_1', 'b'])
-                print("This is the data_i['a_0', 'a_rows_0, 'a_0']: ", data_i['a_0', 'a_rows_0', 'a_0'])
-
-            converted_data.append(data_i)
-            #exit(0)
-            
-            
-        return converted_data
-    
-    def h2(self, x, y):
-        #I coefficienti hanno lo stesso tipo per la stessa dimensione
-        
-        debug = False
-        converted_data = []
-        for index in range(len(x)):
-            this_x = x[index]
-            this_y = y[index]
-            
-            if debug:
-                print("\n\n")
-                print("This is the x: ", this_x)
-                print("This is the y: ", this_y)
-            
-            torch_y = torch.tensor(this_y, dtype=torch.float)
-            data_i = HeteroData(y=torch_y)
-            
-            #data_a = torch.tensor(this_x[:, :-1].astype('float64'), dtype=torch.float)
-            data_a = []
-            for i in range(this_x.shape[1]-1):
-                data_a.append([])
-                
-                for j in range(this_x.shape[0]):
-                    data_a[i].append(this_x[j, i])
-            
-            for i in range(len(data_a)):
-                data_one_dimention = torch.tensor(data_a[i], dtype=torch.float)
-                data_i['a_{}'.format(i)].x = data_one_dimention.unsqueeze(1)
-            
-            data_b = torch.tensor(this_x[:, -1].astype('float64'), dtype=torch.float)
-            data_i['b'].x = data_b.unsqueeze(1)
-
-            
-            #Edges between same dimension
-            edge_between_same_dim = []
-            
-            for i in range(this_x.shape[0]):
-                for j in range(this_x.shape[0]):
-                    if i != j:
-                        edge_between_same_dim.append([i, j])
-            
-            for i in range(this_x.shape[1]-1):
-                edge_index = torch.tensor(edge_between_same_dim, dtype=torch.long).t().contiguous()
-                data_i['a_{}'.format(i), "a_columns".format(i), 'a_{}'.format(i)].edge_index = edge_index
-            
-            data_edge_a_b = []
-            for i in range(this_x.shape[0]):
-                data_edge_a_b.append([i, i])
-                
-            edge_index = torch.tensor(data_edge_a_b, dtype=torch.long).t().contiguous()
-            
-            for i in range(this_x.shape[1]-1):
-                data_i['a_{}'.format(i), "a_b", 'b'].edge_index = edge_index
-            
-            data_i['b', 'b', 'b'].edge_index = torch.tensor(edge_between_same_dim, dtype=torch.long).t().contiguous()
-            
-            
-            data_edge_a_a_rows = []
-            for i in range(this_x.shape[0]):
-                data_edge_a_a_rows.append([i, i])
-            #print("This is the data_edge_a_a_rows: ", data_edge_a_a_rows)
-            
-            for i in range(this_x.shape[1] - 1):
-                for j in range(this_x.shape[1] - 1):
-                    if i != j:
-                        edge_index = torch.tensor(data_edge_a_a_rows, dtype=torch.long).t().contiguous()
-                        data_i['a_{}'.format(i), "a_rows", 'a_{}'.format(j)].edge_index = edge_index
-            
-            if debug:
-                print("This is the data_i: ", data_i)
-                print("This is the data_i['a_0']: ", data_i['a_0'])
-                print("This is the data_i['a_1']: ", data_i['a_1'])
-                print("This is the data_i['b']: ", data_i['b'])
-                print("This is the data_i['a_0', 'a_columns_0, 'a_0']: ", data_i['a_0', 'a_columns_0', 'a_0'])
-                print("This is the data_i['b', 'b', 'b']: ", data_i['b', 'b', 'b'])
-                print("This is the data_i['a_0', 'a_b_0', 'b']: ", data_i['a_0', 'a_b_0', 'b'])
-                print("This is the data_i['a_0', 'a_b_0', 'b']: ", data_i['a_0', 'a_b_0', 'b'])
-                print("This is the data_i['a_0', 'a_rows_0, 'a_1']: ", data_i['a_0', 'a_rows_0', 'a_1'])
-                debug = False
-            
-            converted_data.append(data_i)
-            
-
-        return converted_data
-    
-    
-    def h2_old(self, x, y):
-        #I coefficienti hanno lo stesso tipo per la stessa dimensione
-        debug = False
-        
-        converted_data = []
-        for index in range(len(x)):
-            this_x = x[index]
-            this_y = y[index]
-            
-            if debug:
-                print("This is the x: ", this_x)
-                print("This is the y: ", this_y)
-            
-            torch_y = torch.tensor(this_y, dtype=torch.float)
-            data_i = HeteroData(y=torch_y)
-            
-            #data_a = torch.tensor(this_x[:, :-1].astype('float64'), dtype=torch.float)
-            data_a = []
-            for i in range(this_x.shape[1]-1):
-                data_a.append([])
-                
-                for j in range(this_x.shape[0]):
-                    data_a[i].append(this_x[j, i])
-            
-            for i in range(len(data_a)):
-                data_one_dimention = torch.tensor(data_a[i], dtype=torch.float)
-                data_i['a_{}'.format(i)].x = data_one_dimention.unsqueeze(1)
-            
-            data_b = torch.tensor(this_x[:, -1].astype('float64'), dtype=torch.float)
-            data_i['b'].x = data_b.unsqueeze(1)
-
-            
-            #Edges between same dimension
-            edge_between_same_dim = []
-            
-            for i in range(this_x.shape[0]):
-                for j in range(this_x.shape[0]):
-                    if i != j:
-                        edge_between_same_dim.append([i, j])
-            
-            for i in range(this_x.shape[1]-1):
-                edge_index = torch.tensor(edge_between_same_dim, dtype=torch.long).t().contiguous()
-                data_i['a_{}'.format(i), "a_columns_{}".format(i), 'a_{}'.format(i)].edge_index = edge_index
-            
-            data_edge_a_b = []
-            for i in range(this_x.shape[0]):
-                data_edge_a_b.append([i, i])
-                
-            edge_index = torch.tensor(data_edge_a_b, dtype=torch.long).t().contiguous()
-            
-            for i in range(this_x.shape[1]-1):
-                data_i['a_{}'.format(i), "a_b_{}".format(i), 'b'].edge_index = edge_index
-            
-            data_i['b', 'b', 'b'].edge_index = torch.tensor(edge_between_same_dim, dtype=torch.long).t().contiguous()
-            
-            
-            data_edge_a_a_rows = []
-            for i in range(this_x.shape[0]):
-                data_edge_a_a_rows.append([i, i])
-            #print("This is the data_edge_a_a_rows: ", data_edge_a_a_rows)
-            
-            for i in range(this_x.shape[1] - 1):
-                for j in range(this_x.shape[1] - 1):
-                    if i != j:
-                        edge_index = torch.tensor(data_edge_a_a_rows, dtype=torch.long).t().contiguous()
-                        data_i['a_{}'.format(i), "a_rows_{}".format(i), 'a_{}'.format(j)].edge_index = edge_index
-            
-            if debug:
-                print("This is the data_i: ", data_i)
-                print("This is the data_i['a_0']: ", data_i['a_0'])
-                print("This is the data_i['a_1']: ", data_i['a_1'])
-                print("This is the data_i['b']: ", data_i['b'])
-                print("This is the data_i['a_0', 'a_columns_0, 'a_0']: ", data_i['a_0', 'a_columns_0', 'a_0'])
-                print("This is the data_i['b', 'b', 'b']: ", data_i['b', 'b', 'b'])
-                print("This is the data_i['a_0', 'a_b_0', 'b']: ", data_i['a_0', 'a_b_0', 'b'])
-                print("This is the data_i['a_0', 'a_b_0', 'b']: ", data_i['a_0', 'a_b_0', 'b'])
-                print("This is the data_i['a_0', 'a_rows_0, 'a_1']: ", data_i['a_0', 'a_rows_0', 'a_1'])
-                debug = False
-            converted_data.append(data_i)
-            #exit(0)
-            
-            """
-            edge_index = []
-            for i in range(this_x.shape[0]):
-                for j in range(this_x.shape[0]):
-                    if i != j:
-                        edge_index.append([i, j])
-            edge_index = torch.tensor([[0, 1, 1, 2], [1, 0, 2, 1]], dtype=torch.long)
-            edge_index = torch.tensor(edge_index, dtype=torch.long).t().contiguous()
-            
-            torch_x = torch.tensor(this_x.astype('float64'), dtype=torch.float)
-            torch_y = torch.tensor(this_y, dtype=torch.float)
-            #torch_y = torch.tensor(100, dtype=torch.float)
-            converted_data.append(Data(x=torch_x, edge_index=edge_index, y=torch_y))
-            """
-            
-            """print("This is the data_i: ", data_i)
-            exit(0)"""
-
-        return converted_data
-
-        
-    def convert_data(self, x, y, conversion): #Second try
-        converted_data = []
-        for index in range(len(x)):
-            this_x = x[index]
-            this_y = y[index]
-            
-            if conversion == "dimensions":
-                this_x = this_x.transpose()
-            
-            edge_index = []
-            for i in range(this_x.shape[0]):
-                for j in range(this_x.shape[0]):
-                    if i != j:
-                        edge_index.append([i, j])
-            edge_index = torch.tensor(edge_index, dtype=torch.long).t().contiguous()
-            
-            torch_x = torch.tensor(this_x.astype('float64'), dtype=torch.float)
-            torch_y = torch.tensor(this_y, dtype=torch.float)
-            #torch_y = torch.tensor(100, dtype=torch.float)
-            converted_data.append(Data(x=torch_x, edge_index=edge_index, y=torch_y))
-
         return converted_data
 
     def __len__(self):

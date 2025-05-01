@@ -34,3 +34,24 @@ From 100 to 10000
 run 6-7 hanno le relazioni senza un nome specifico
 
 run 3 era h2 (con nomi delle relazioni specifiche)
+
+
+
+
+
+
+    
+        #New tests
+        #V1: connessioni cicliche tra i nodi (stesso tipo di connessione)
+        #V2: connessioni acicliche tra i nodi. Rimetto manualmente b e x ad ogni convoluzione
+        #V3: connessioni acicliche tra i nodi. Metto i self loops
+        
+        
+        #V1 is the best one
+        
+        
+        # We need to use a convolutional layer to obtain the node embeddings (for the inhomogeneous case)
+        # https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.conv.RGCNConv.html#torch_geometric.nn.conv.RGCNConv
+        # https://pytorch-geometric.readthedocs.io/en/latest/get_started/introduction.html
+        # https://pytorch-geometric.readthedocs.io/en/latest/cheatsheet/gnn_cheatsheet.html#heterogeneous-graph-neural-network-operators 
+        # https://pytorch-geometric.readthedocs.io/en/latest/tutorial/heterogeneous.html

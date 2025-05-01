@@ -8,47 +8,11 @@ class NewModel(torch.nn.Module):
     
     def __init__(self, node_features, hidden_channels, n_releations, targhet_shape, conversion, n_layers, p_drop=0.3, seed=0):
         super(NewModel, self).__init__()
+        
         torch.manual_seed(seed)
-        
-        
-        #New tests
-        #V1: connessioni cicliche tra i nodi (stesso tipo di connessione)
-        #V2: connessioni acicliche tra i nodi. Rimetto manualmente b e x ad ogni convoluzione
-        #V3: connessioni acicliche tra i nodi. Metto i self loops
-        
-        
-        #V1 is the best one
-        
-        
-        # We need to use a convolutional layer to obtain the node embeddings (for the inhomogeneous case)
-        # https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.conv.RGCNConv.html#torch_geometric.nn.conv.RGCNConv
-        # https://pytorch-geometric.readthedocs.io/en/latest/get_started/introduction.html
-        # https://pytorch-geometric.readthedocs.io/en/latest/cheatsheet/gnn_cheatsheet.html#heterogeneous-graph-neural-network-operators 
-        # https://pytorch-geometric.readthedocs.io/en/latest/tutorial/heterogeneous.html
-        
-        
-        
         self.convs = torch.nn.ModuleList()
-        #hidden_channels_linear = hidden_channels * 3 #3 is the number of different node types (v1)
-        #hidden_channels_linear = hidden_channels #3 is the number of different node types (v2)
         hidden_channels_linear = hidden_channels *3 #3 is the number of different node types (v3)
         
-        """
-        #For H2:
-        for _ in range(n_layers):
-            conv = HeteroConv({
-                ('a_0', 'a_columns', 'a_0'):  GraphConv(-1, hidden_channels),
-                ('a_1', 'a_columns', 'a_1'):  GraphConv(-1, hidden_channels),
-                ('a_0', 'a_b', 'b'):  GraphConv(-1, hidden_channels),
-                ('a_1', 'a_b', 'b'):  GraphConv(-1, hidden_channels),
-                ('b', 'b', 'b'):  GraphConv(-1, hidden_channels),
-                ('a_0', 'a_rows', 'a_1'):  GraphConv(-1, hidden_channels),
-                ('a_1', 'a_rows', 'a_0'):  GraphConv(-1, hidden_channels),
-            }, aggr='sum')
-            self.convs.append(conv)
-        """
-        
-        #New v1
         for _ in range(n_layers):
             conv = HeteroConv({
                 ('x', 'a', 'c'):  ResGatedGraphConv((-1, -1), hidden_channels, edge_dim=1),
@@ -59,30 +23,6 @@ class NewModel(torch.nn.Module):
                 }, aggr='sum')
             self.convs.append(conv)
             
-            
-        #New v1 but with GraphConv
-        """for _ in range(n_layers):
-            conv = HeteroConv({
-                ('x', 'a', 'c'):  GraphConv(-1, hidden_channels),
-                ('b', 'b', 'c'):  GraphConv(-1, hidden_channels),
-                
-                ('c', 'a', 'x'):  GraphConv(-1, hidden_channels),
-                ('c', 'b', 'b'):  GraphConv(-1, hidden_channels),
-                }, aggr='sum')
-            self.convs.append(conv)
-        """
-        
-        #New v2 / v3?
-        """for _ in range(n_layers):
-            conv = HeteroConv({
-                ('x', 'a', 'c'):  ResGatedGraphConv((-1, -1), hidden_channels, edge_dim=1),
-                ('b', 'b', 'c'):  ResGatedGraphConv((-1, -1), hidden_channels, edge_dim=1),
-                ('x', 'self_x', 'x'):  ResGatedGraphConv((-1, -1), hidden_channels, edge_dim=1),
-                ('b', 'self_b', 'b'):  ResGatedGraphConv((-1, -1), hidden_channels, edge_dim=1),
-                }, aggr='sum')
-            self.convs.append(conv)
-        """
-        
         
         self.dropout = Dropout(p=p_drop)
         
@@ -94,48 +34,18 @@ class NewModel(torch.nn.Module):
         torch.nn.init.uniform_(self.out.weight) 
 
     def forward(self, x, edge_index, edge_attr, batch, train=True):
-        # 1. Obtain node embeddings
-        
-        #print("x", x)
-        #print("edge_index", edge_index)
-        #print("edge_attr", edge_attr)
-        
-        """x["x"] = x["x"][:2]
-        x["c"] = x["c"][:3]
-        x["b"] = x["b"][:3]
-        
-        edge_attr[("x", "a", "c")] = edge_attr[("x", "a", "c")][:3]
-        edge_attr[("c", "b", "b")] = edge_attr[("c", "b", "b")][:6]
-        
-        edge_index[("x", "a", "c")] = edge_index[("x", "a", "c")][:3]
-        edge_index[("c", "b", "b")] = edge_index[("c", "b", "b")][:6]"""
-
         i = 0
-        #original_x = copy.deepcopy(x) #V2
         
         for conv in self.convs:
-            #x["x"] = copy.deepcopy(original_x["x"]) #V2
-            #x["b"] = copy.deepcopy(original_x["b"]) #V2
-            
-            """print(f"Iteration {i}")
-            print("x before conv:", x)
-            print(x["c"].shape)
-            print(x["b"].shape)
-            print(x["x"].shape)
-            print(edge_index[("x", "a", "c")].shape)
-            print(edge_attr[("x", "a", "c")].shape)"""
-            #x = conv(x, edge_index, edge_attr) #ResGatedGraphConv
             x = conv(x, edge_index, edge_attr) #GraphConv
-            #print("x after conv:", x)
             x = {key: fra.relu() for key, fra in x.items()}
-            #print("x after ReLU:", x)
             i += 1
 
         mean_representation = []
         for key in x.keys():
             mean_representation.append(global_mean_pool(x[key], batch[key]))
+        
         x = torch.cat(mean_representation, dim=1)
-        #print("x.shape", x.shape)
 
         if train:
             x = self.dropout(x)
@@ -151,3 +61,4 @@ class NewModel(torch.nn.Module):
         x = torch.flatten(x)
         
         return x
+    

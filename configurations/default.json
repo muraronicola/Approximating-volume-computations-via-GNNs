@@ -1,6 +1,7 @@
 {
     "device": "cuda:0",
     "base_filename": "generalization",
+    "seed": 0,
     "data": {
         "max_samples": 10000,
         "base_path": "./data/",

@@ -1,6 +1,6 @@
 {
     "device": "cuda:0",
-    "base_filename": "generalization",
+    "base_filename": "demooo",
     "seed": 0,
     "data": {
         "max_samples": 10000,
@@ -15,8 +15,7 @@
         "train-data": null,
         "test-data": null,
         "normalize": false,
-        "conversion": "new",
-        "cutoff": 10000
+        "conversion": "new"
     },
     "model":{
         "heterogeneus": true,

@@ -65,7 +65,7 @@ class LoadData():
         return train_loader, dev_loader, test_loader
     
     
-    def get_data(self, dev_split_size=0.2, test_split_size=0.2, normalize=False, conversions="constraints", n_max_samples=100000, only_inference=False):
+    def get_data(self, dev_split_size=0.2, test_split_size=0.2, normalize=False, n_max_samples=100000, only_inference=False):
         
         #Shuffle the data
         p = self.rng.permutation(len(self.x_train))
@@ -100,12 +100,12 @@ class LoadData():
             x_dev = scaler.transform(x_dev.reshape(-1, x_dev.shape[-1])).reshape(x_dev.shape)
             x_test = scaler.transform(x_test.reshape(-1, x_test.shape[-1])).reshape(x_test.shape)
         
-        du_train = du.DataUnit(x_train, y_train, conversion=conversions)
+        du_train = du.DataUnit(x_train, y_train)
         du_dev = None
         du_test = None
         
         if not only_inference:
-            du_dev = du.DataUnit(x_dev, y_dev, conversion=conversions)
-            du_test = du.DataUnit(x_test, y_test, conversion=conversions)
+            du_dev = du.DataUnit(x_dev, y_dev)
+            du_test = du.DataUnit(x_test, y_test)
         
         return du_train, du_dev, du_test

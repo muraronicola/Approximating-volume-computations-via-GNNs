@@ -3,8 +3,6 @@ import torch
 from LoadData import LoadData
 import configurations.configurations as conf
 import argparse
-from Heterogeneus_model import Heterogeneus
-from Homogeneus_model import Homogeneus
 from NewModel import NewModel
 import numpy as np
 import pandas as pd
@@ -91,7 +89,7 @@ def main():
     conf_data["target_shape"][1] += 1
     
     load_data = LoadData(base_path=conf_data["base_path"], exact_polytopes=conf_data["exact_polytopes"], shape=(conf_data["target_shape"][0], conf_data["target_shape"][1]), rng=rng)
-    load_data.add_dataset(conf_data["train-test-data"][0], train_data=conf_data["train-test-data-train"][0], cutoff=conf_data["cutoff"])
+    load_data.add_dataset(conf_data["train-test-data"][0], train_data=conf_data["train-test-data-train"][0])
     
     for i in range(1, len(conf_data["train-test-data"])):
         load_data.add_dataset(conf_data["train-test-data"][i], train_data=conf_data["train-test-data-train"][i])
@@ -106,7 +104,7 @@ def main():
         raise ValueError("Invalid combination of converstion and heterogeneus")
     
     
-    train_loader, dev_loader, test_loader = load_data.get_dataloaders(test_split_size=conf_data["train-test-split"], dev_split_size=conf_data["train-eval-split"], train_batch_size=conf_train["train_batch_size"], eval_batch_size=conf_train["eval_batch_size"], normalize=conf_data["normalize"], conversions=conf_data["conversion"], n_max_samples=conf_data["max_samples"])
+    train_loader, dev_loader, test_loader = load_data.get_dataloaders(test_split_size=conf_data["train-test-split"], dev_split_size=conf_data["train-eval-split"], train_batch_size=conf_train["train_batch_size"], eval_batch_size=conf_train["eval_batch_size"], normalize=conf_data["normalize"], n_max_samples=conf_data["max_samples"])
     
     new = False
     if conf_data["conversion"] == "new":

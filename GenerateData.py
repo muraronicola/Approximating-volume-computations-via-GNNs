@@ -10,18 +10,20 @@ from tqdm import tqdm
 import math
 
 def is_bounded(A, b):
+    ok = True
+    
     n = A.shape[1]
     c = np.full(n, -1)
     res = linprog(c, A_ub=A, b_ub=b, bounds=(None, None))
     if not res.success:
-        return False
+        ok =  False
     
     c = np.full(n, 1)
     res = linprog(c, A_ub=A, b_ub=b, bounds=(None, None))
     if not res.success:
-        return False
+        ok = False
     
-    return True
+    return ok
 
 
 def generate_polytope(rng, m=4, r=3):
@@ -40,19 +42,25 @@ def generate_polytope(rng, m=4, r=3):
 
 
 def check_exact_polytope(original_volume, A, b, m): #Check if all the constraints are useful
-    for i in range(m):
+    exact = True
+    
+    i = 0
+    while i < m and exact:
         A_i = np.delete(A, i, axis=0)
         b_i = np.delete(b, i)
         
         is_valid = is_bounded(A_i, b_i)
+        
         if is_valid:
             p = Polytope(A=A_i, b=b_i)
             new_volume = p.volume()
 
             if new_volume < original_volume + original_volume * 0.05: #The constraint is that the volume must change at least 5% to be considered a different polytope
-                return False
+                exact = False
         
-    return True
+        i += 1
+        
+    return exact
 
 
 def generate_n_polytopes(n_polytopes, base_path="./data/", seed=0, m=4, r=3, save_images=True, only_exact=False, uniform=True, max_volume=500, normalize=True):
@@ -76,6 +84,7 @@ def generate_n_polytopes(n_polytopes, base_path="./data/", seed=0, m=4, r=3, sav
     target_volume = math.floor(n_polytopes/(max_volume/discretization_step))
     
     while i < n_polytopes:
+        finite_volume = True
         
         if uniform:
             if (volume_counter == target_volume).all():
@@ -87,33 +96,31 @@ def generate_n_polytopes(n_polytopes, base_path="./data/", seed=0, m=4, r=3, sav
             polytope = Polytope(A=A, b=b)
 
             try:
-                volume = polytope.volume()  #ConvexHull
+                volume = polytope.volume() # Based on ConvexHull
             except:
                 print("Error in volume calculation, not enough points")
-                continue
+                finite_volume = False
             
-            x = np.concatenate((A, b.reshape(-1, 1)), axis=1)
-            if not only_exact:
-                data_x.append(x)
-                data_y.append(volume)
+            if finite_volume: 
+                x = np.concatenate((A, b.reshape(-1, 1)), axis=1)
+                
+                if not only_exact:
+                    data_x.append(x)
+                    data_y.append(volume)
+                
+                if check_exact_polytope(volume, A, b, m):
+                    if (not uniform) or (uniform and volume < max_volume and volume_counter[round(volume/discretization_step) - 1] < target_volume):
+                        
+                        if r <= 3 and save_images:
+                            plot_polytope(polytope, save=save_images, show=False, filename=path + "politope_" + str(i) + ".png")
+                        
+                        data_exact_politope_x.append(x)
+                        data_exact_politope_y.append(volume)
+                        volume_counter[round(volume/discretization_step) - 1] += 1
+                        
+                        i += 1
+                        pbar.update(1)
             
-            if check_exact_polytope(volume, A, b, m):
-                if uniform:
-                    if volume >= max_volume:
-                        continue #Reject the polytope
-                    
-                    if volume_counter[round(volume/discretization_step) - 1] >= target_volume:
-                        continue #Reject the polytope
-                
-                if r <= 3 and save_images:
-                    plot_polytope(polytope, save=save_images, show=False, filename=path + "politope_" + str(i) + ".png")
-                
-                data_exact_politope_x.append(x)
-                data_exact_politope_y.append(volume)
-                volume_counter[round(volume/discretization_step) - 1] += 1
-                i += 1
-                pbar.update(1)
-        
         if i == 10 and save_images: 
             save_images = False
 

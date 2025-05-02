@@ -1,21 +1,19 @@
 {
+    "seed": 0,
     "device": "cuda:0",
     "base_filename": "demooo",
-    "seed": 0,
     "out_path": "./out/",
+    "inference_only": false,
     "data": {
-        "max_samples": null,
+        "max_samples": 100,
         "base_path": "./data/",
-        "exact_polytopes": true,
-        "train-test-separation" : false,
-        "train-dev-split" : 0.2,
-        "train-test-split" : 0.2,
+        "train-dev-split" : 0.02,
+        "train-test-split" : 0.02,
         "data": ["m_3_r_2"],
         "data-split": ["tr-de-te"],
-        "normalize": false,
-        "conversion": "new"
+        "normalize": true
     },
-    "train":{
+    "train":{ 
         "train_batch_size": 2048,
         "eval_batch_size": 4096,
         "train_epochs": 5000,
@@ -27,4 +25,3 @@
         "n_layers": 3
     }
 }
-

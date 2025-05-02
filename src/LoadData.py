@@ -102,12 +102,11 @@ class LoadData():
                 random.shuffle(temp) 
                 x_train, y_train = zip(*temp)  
                 
-                x_train = x_train[:n_max_samples]
-                y_train = y_train[:n_max_samples]
-        
+                x_train = [x for x in x_train[:n_max_samples]]
+                y_train = [y for y in y_train[:n_max_samples]]
+                
         
         if normalize:
-            
             for i in range(len(x_train)):
                 x_train[i] = x_train[i] / np.linalg.norm(x_train[i])
             

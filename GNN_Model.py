@@ -1,17 +1,16 @@
 import torch
 from torch.nn import Linear, Dropout
-import torch.nn.functional as F
 from torch_geometric.nn import RGCNConv, global_mean_pool, HeteroConv, GCNConv, SAGEConv, GATConv, Linear, GraphConv, ResGatedGraphConv
-import copy
 
-class NewModel(torch.nn.Module):
+
+class GNN_Model(torch.nn.Module):
     
-    def __init__(self, node_features, hidden_channels, n_releations, targhet_shape, conversion, n_layers, p_drop=0.3, seed=0):
-        super(NewModel, self).__init__()
+    def __init__(self, hidden_channels, n_layers, p_drop=0.3, seed=0):
+        super(GNN_Model, self).__init__()
         
         torch.manual_seed(seed)
         self.convs = torch.nn.ModuleList()
-        hidden_channels_linear = hidden_channels *3 #3 is the number of different node types (v3)
+        hidden_channels_linear = hidden_channels * 3 #3 is the number of different node types (v3)
         
         for _ in range(n_layers):
             conv = HeteroConv({
@@ -33,13 +32,13 @@ class NewModel(torch.nn.Module):
         
         torch.nn.init.uniform_(self.out.weight) 
 
+
+
     def forward(self, x, edge_index, edge_attr, batch, train=True):
-        i = 0
-        
+
         for conv in self.convs:
             x = conv(x, edge_index, edge_attr) #GraphConv
             x = {key: fra.relu() for key, fra in x.items()}
-            i += 1
 
         mean_representation = []
         for key in x.keys():
@@ -61,4 +60,3 @@ class NewModel(torch.nn.Module):
         x = torch.flatten(x)
         
         return x
-    

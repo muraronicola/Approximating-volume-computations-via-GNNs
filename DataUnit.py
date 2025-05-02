@@ -6,13 +6,28 @@ from torch_geometric.data import Data, HeteroData
 
 class DataUnit(Dataset):
     def __init__(self, x, y):
+        
+        self.x = x
+        self.y = y
+        
+        self.data = self.convert_data()
+        
+        print("DataUnit init")
+        print("len(x)", len(x))
+    
+    def __len__(self): 
+        return len(self.data)
 
+    def __getitem__(self, idx):
+        return self.data[idx]
+    
+    def convert_data(self):
         debug = False
         converted_data = []
         
-        for index in range(len(x)):
-            this_x = x[index]
-            this_y = y[index]
+        for index in range(len(self.x)):
+            this_x = self.x[index]
+            this_y = self.y[index]
             
             if debug:
                 print("\n\nThis is the x: ", this_x)
@@ -91,9 +106,4 @@ class DataUnit(Dataset):
             converted_data.append(data_i)
         
         return converted_data
-
-    def __len__(self):
-        return len(self.data)
-
-    def __getitem__(self, idx):
-        return self.data[idx]
+    

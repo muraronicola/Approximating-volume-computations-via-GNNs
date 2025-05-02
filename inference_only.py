@@ -4,7 +4,7 @@ import configurations.configurations as conf
 import argparse
 from Heterogeneus_model import Heterogeneus
 from Homogeneus_model import Homogeneus
-from NewModel import NewModel
+from GNN_Model import GNN_Model
 from sklearn.metrics import r2_score
 import numpy as np
 import pandas as pd
@@ -162,7 +162,7 @@ def main():
     for i in range(1, len(conf_data["train-test-data"])):
         load_data.add_dataset(conf_data["train-test-data"][i], train_data=True)
     
-    node_features = load_data.get_node_features()[1]
+    node_features = load_data.get_node_shape()[1]
     
     
     if (conf_data["conversion"] == "constraints" or conf_data["conversion"] == "dimensions") and conf_model["heterogeneus"]:
@@ -187,7 +187,7 @@ def main():
         if conf_data["conversion"] == "h1" or conf_data["conversion"] == "h2":
             model = Heterogeneus(node_features=node_features, hidden_channels=conf_train["hidden_channels"], n_releations=conf_model["n_releations"], p_drop=conf_train["dropout"], targhet_shape=conf_data["target_shape"], conversion=conf_data["conversion"], n_layers=conf_train["n_layers"]).to(device)
         elif conf_data["conversion"] == "new":
-            model = NewModel(node_features=node_features, hidden_channels=conf_train["hidden_channels"], n_releations=conf_model["n_releations"], p_drop=conf_train["dropout"], targhet_shape=conf_data["target_shape"], conversion=conf_data["conversion"], n_layers=conf_train["n_layers"]).to(device)
+            model = GNN_Model(node_features=node_features, hidden_channels=conf_train["hidden_channels"], n_releations=conf_model["n_releations"], p_drop=conf_train["dropout"], targhet_shape=conf_data["target_shape"], conversion=conf_data["conversion"], n_layers=conf_train["n_layers"]).to(device)
     else:
         model = Homogeneus(node_features=node_features, hidden_channels=conf_train["hidden_channels"], p_drop=conf_train["dropout"]).to(device)
 

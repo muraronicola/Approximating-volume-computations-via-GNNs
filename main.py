@@ -1,9 +1,9 @@
-from utils import mean_relative_error, mean_squared_error, mean_absolute_error, find_filename
+from utils import mean_relative_error, mean_squared_error, mean_absolute_error, find_filename, get_paths
 import torch
 from LoadData import LoadData
 import configurations.configurations as conf
 import argparse
-from NewModel import NewModel
+from GNN_Model import GNN_Model
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -11,8 +11,7 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 import os
 import copy
-
-
+import shutil
 
 def train(model, train_loader, optimizer, loss_function, device="cpu"):
     model.train()
@@ -26,16 +25,16 @@ def train(model, train_loader, optimizer, loss_function, device="cpu"):
         loss = loss_function(out, data.y) 
         loss_array.append(loss.item())
         
-        data.to("cpu")
-        
         loss.backward()
         optimizer.step()
         optimizer.zero_grad()
+        
+        data.to("cpu")
     
     return loss_array
 
 
-def evaluate(model, eval_loader, heterogeneus = False, new = False, device="cpu", convolution_information="edge_attr"):
+def evaluate(model, eval_loader, device="cpu"):
     model.eval()
     
     pred_mean = 0
@@ -46,7 +45,7 @@ def evaluate(model, eval_loader, heterogeneus = False, new = False, device="cpu"
         for data in eval_loader:
             data.to(device)
             
-            out = model(data.x_dict, data.edge_index_dict, data.edge_attr_dict, data.batch_dict, train=True)
+            out = model(data.x_dict, data.edge_index_dict, data.edge_attr_dict, data.batch_dict, train=False)
             
             array_pred = np.concatenate((array_pred, out.detach().cpu().numpy().flatten()), axis=None)
             array_y = np.concatenate((array_y, data.y.detach().cpu().numpy().flatten()), axis=None)
@@ -54,15 +53,14 @@ def evaluate(model, eval_loader, heterogeneus = False, new = False, device="cpu"
             data.to("cpu")
     
     mse = mean_squared_error(array_pred, array_y)
-    mean_error = mean_absolute_error(array_pred, array_y)
+    mae = mean_absolute_error(array_pred, array_y)
     
     pred_mean = np.mean(array_pred)
     pred_std = np.std(array_pred)
     
-    mean_rel_error = mean_relative_error(array_pred, array_y)
+    mre = mean_relative_error(array_pred, array_y)
     
-    return mse, mean_error, pred_mean, pred_std, array_y, array_pred, mean_rel_error
-    
+    return mse, mae, mre, pred_mean, pred_std
 
 
 def main():
@@ -73,156 +71,74 @@ def main():
     path_configuration = args.path_configuration
     
     configuration = conf.get_configuration(path_configuration)
-    base_filename = configuration["base_filename"]
     
-    file_name = find_filename(base_filename)
-    print("Saving results in: ", file_name)
+    out_conf_path, out_data_path, out_data_model = get_paths(configuration["out_path"], configuration["base_filename"])
     
-    rng = np.random.default_rng(int(configuration["seed"]))
+    shutil.copyfile(path_configuration, out_conf_path)
     
     device = configuration["device"]
-
     conf_data = configuration["data"]
-    conf_model = configuration["model"]
     conf_train = configuration["train"]
     
-    conf_data["target_shape"][1] += 1
+    load_data = LoadData(base_path=conf_data["base_path"], exact_polytopes=conf_data["exact_polytopes"], dev_split_size=conf_data["train-dev-split"], test_split_size=conf_data["train-test-split"], seed=configuration["seed"])
+    load_data.add_dataset(conf_data["data"][0], split=conf_data["data-split"][0])
     
-    load_data = LoadData(base_path=conf_data["base_path"], exact_polytopes=conf_data["exact_polytopes"], shape=(conf_data["target_shape"][0], conf_data["target_shape"][1]), rng=rng)
-    load_data.add_dataset(conf_data["train-test-data"][0], train_data=conf_data["train-test-data-train"][0])
+    for i in range(1, len(conf_data["data"])):
+        load_data.add_dataset(conf_data["data"][i], split=conf_data["data-split"][i])
     
-    for i in range(1, len(conf_data["train-test-data"])):
-        load_data.add_dataset(conf_data["train-test-data"][i], train_data=conf_data["train-test-data-train"][i])
-    
-    node_features = load_data.get_node_features()[1]
-    
-    
-    if (conf_data["conversion"] == "constraints" or conf_data["conversion"] == "dimensions") and conf_model["heterogeneus"]:
-        raise ValueError("Invalid combination of converstion and heterogeneus")
-    
-    if (conf_data["conversion"] == "h1" or conf_data["conversion"] == "h2" or conf_data["conversion"] == "new") and not conf_model["heterogeneus"]:
-        raise ValueError("Invalid combination of converstion and heterogeneus")
-    
-    
-    train_loader, dev_loader, test_loader = load_data.get_dataloaders(test_split_size=conf_data["train-test-split"], dev_split_size=conf_data["train-eval-split"], train_batch_size=conf_train["train_batch_size"], eval_batch_size=conf_train["eval_batch_size"], normalize=conf_data["normalize"], n_max_samples=conf_data["max_samples"])
-    
-    new = False
-    if conf_data["conversion"] == "new":
-        new = True
+    train_loader, dev_loader, test_loader = load_data.get_dataloaders(train_batch_size=conf_train["train_batch_size"], eval_batch_size=conf_train["eval_batch_size"], normalize=conf_data["normalize"], n_max_samples=conf_data["max_samples"])
     
     #Save txt file with configuration
-    file_config = open("./runs/" + file_name + ".txt", "w")
-    #It's a json i want a new line for each key
-    json_str = str(configuration).replace(", ", ",\n").replace("{", "{\n").replace("}", "\n}")
-    file_config.write(json_str)
-    file_config.close()
     
-    if conf_model["heterogeneus"]:
-        if conf_data["conversion"] == "h1" or conf_data["conversion"] == "h2":
-            model = Heterogeneus(node_features=node_features, hidden_channels=conf_train["hidden_channels"], n_releations=conf_model["n_releations"], p_drop=conf_train["dropout"], targhet_shape=conf_data["target_shape"], conversion=conf_data["conversion"], n_layers=conf_train["n_layers"]).to(device)
-        elif conf_data["conversion"] == "new":
-            model = NewModel(node_features=node_features, hidden_channels=conf_train["hidden_channels"], n_releations=conf_model["n_releations"], p_drop=conf_train["dropout"], targhet_shape=conf_data["target_shape"], conversion=conf_data["conversion"], n_layers=conf_train["n_layers"]).to(device)
-    else:
-        model = Homogeneus(node_features=node_features, hidden_channels=conf_train["hidden_channels"], p_drop=conf_train["dropout"]).to(device)
 
-
-    if conf_train["convolution_information"] != "edge_attr" and conf_train["convolution_information"] != "edge_weight":
-        raise ValueError("Invalid convolution information")
+    model = GNN_Model(hidden_channels=conf_train["hidden_channels"], n_layers=conf_train["n_layers"]).to(device)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=conf_train["learning_rate"])
     #optimizer = torch.optim.SGD(model.parameters(), lr=0.000005)
     
     if conf_train["loss"] == "mse":
-        criterion = torch.nn.MSELoss()
+        loss_function = torch.nn.MSELoss()
     elif conf_train["loss"] == "l1":
-        criterion = torch.nn.L1Loss()
+        loss_function = torch.nn.L1Loss()
     else:
         raise ValueError("Loss not supported")
 
-    results = pd.DataFrame(columns=["epoch", "train_loss", "train_mse", "test_mse", "dev_mse", "mean_error_train", "mean_error_dev", "mean_error_test", "mean_rel_error_train", "mean_rel_error_dev", "mean_rel_error_test",  "mean_pred_train", "mean_pred_dev", "mean_pred_test", "std_pred_train", "std_pred_dev", "std_pred_test"])
+    results = pd.DataFrame(columns=["epoch", "loss_train", "mse_train", "mse_dev", "mse_test", "mae_train", "mae_dev", "mae_test", "mre_train", "mre_dev", "mre_test",  "pred_mean_train", "pred_mean_dev", "pred_mean_test", "pred_std_train", "pred_std_dev", "pred_std_test"])
     
     iterator = tqdm(range(1, conf_train["train_epochs"]+1))
-    best_eval = 100000000
+    best_eval = float("inf")
     best_epoch_eval = 0
     best_model = None
+    
     for epoch in iterator:
-        loss = train(model, train_loader, optimizer, criterion, heterogeneus=conf_model["heterogeneus"], new=new, device=device, convolution_information=conf_train["convolution_information"])
+        loss = train(model, train_loader, optimizer, loss_function, device=device)
         
-        train_mse, mean_error_train, mean_pred_train, std_pred_train, _, _, mean_rel_error_train = evaluate(model, train_loader, heterogeneus=conf_model["heterogeneus"], new=new, device=device, convolution_information=conf_train["convolution_information"])
-        dev_mse, mean_error_dev, mean_pred_dev, std_pred_dev, _, _, mean_rel_error_dev = evaluate(model, dev_loader, heterogeneus=conf_model["heterogeneus"], new=new, device=device, convolution_information=conf_train["convolution_information"])
-        test_mse, mean_error_test, mean_pred_test, std_pred_test, _, _, mean_rel_error_test = evaluate(model, test_loader, heterogeneus=conf_model["heterogeneus"], new=new, device=device, convolution_information=conf_train["convolution_information"])
+        mse_train, mae_train, mre_train, pred_mean_train, pred_std_train = evaluate(model, train_loader, device=device)
+        mse_dev, mae_dev, mre_dev, pred_mean_dev, pred_std_dev = evaluate(model, dev_loader, device=device)
+        mse_test, mae_test, mre_test, pred_mean_test, pred_std_test = evaluate(model, test_loader, device=device)
         
         
         if conf_train["loss"] == "mse":
-            if dev_mse < best_eval:
-                best_eval = dev_mse
+            if mse_dev < best_eval:
+                best_eval = mse_dev
                 best_epoch_eval = epoch
                 best_model = copy.deepcopy(model)
         else:
-            if mean_error_dev < best_eval:
-                best_eval = mean_error_dev
+            if mae_dev < best_eval:
+                best_eval = mae_dev
                 best_epoch_eval = epoch
                 best_model = copy.deepcopy(model)
         
         if epoch - best_epoch_eval > conf_train["early_stopping"]:
             break
         
-        new_data = pd.DataFrame([[epoch, np.mean(loss), train_mse, test_mse, dev_mse, mean_error_train, mean_error_dev, mean_error_test, mean_rel_error_train, mean_rel_error_dev, mean_rel_error_test, mean_pred_train, mean_pred_dev, mean_pred_test, std_pred_train, std_pred_dev, std_pred_test]], columns=["epoch", "train_loss", "train_mse", "test_mse", "dev_mse", "mean_error_train", "mean_error_dev", "mean_error_test", "mean_rel_error_train", "mean_rel_error_dev", "mean_rel_error_test", "mean_pred_train", "mean_pred_dev", "mean_pred_test", "std_pred_train", "std_pred_dev", "std_pred_test"])
+        new_data = pd.DataFrame([[epoch, np.mean(loss), mse_train, mse_dev, mse_test, mae_train, mae_dev, mae_test, mre_train, mre_dev, mre_test, pred_mean_train, pred_mean_dev, pred_mean_test, pred_std_train, pred_std_dev, pred_std_test]], columns=["epoch", "loss_train", "mse_train", "mse_dev", "mse_test", "mae_train", "mae_dev", "mae_test", "mre_train", "mre_dev", "mre_test",  "pred_mean_train", "pred_mean_dev", "pred_mean_test", "pred_std_train", "pred_std_dev", "pred_std_test"])
         results = pd.concat([results, new_data])
         
-        iterator.set_description(f'Train mean loss: { np.mean(loss):.4f}')
+        iterator.set_description(f'Mean absolute error dev: { mae_dev:.4f}')
 
-    results.to_csv("./runs/" + file_name + ".csv")
-    torch.save(best_model, "./runs/" + file_name + ".pt")
-    torch.save(best_model.state_dict(), "./runs/" + file_name + "_state_dict.pt")
-    
-    figure2, ax2 = plt.subplots(5, 3, figsize=(18, 20))
-
-    sns.lineplot(data=results, x="epoch", y="train_mse", ax=ax2[0, 0])
-    sns.lineplot(data=results, x="epoch", y="dev_mse", ax=ax2[0, 1])
-    sns.lineplot(data=results, x="epoch", y="test_mse", ax=ax2[0, 2])
-
-    sns.lineplot(data=results, x="epoch", y="train_mse", ax=ax2[1, 0])
-    sns.lineplot(data=results, x="epoch", y="dev_mse", ax=ax2[1, 1])
-    sns.lineplot(data=results, x="epoch", y="test_mse", ax=ax2[1, 2])
-    ax2[1, 0].set_yscale('log')
-    ax2[1, 1].set_yscale('log')
-    ax2[1, 2].set_yscale('log')
-
-
-    sns.lineplot(data=results, x="epoch", y="mean_error_train", ax=ax2[2, 0])
-    sns.lineplot(data=results, x="epoch", y="mean_error_dev", ax=ax2[2, 1])
-    sns.lineplot(data=results, x="epoch", y="mean_error_test", ax=ax2[2, 2])
-
-    sns.lineplot(data=results, x="epoch", y="mean_pred_train", ax=ax2[3, 0])
-    sns.lineplot(data=results, x="epoch", y="mean_pred_dev", ax=ax2[3, 1])
-    sns.lineplot(data=results, x="epoch", y="mean_pred_test", ax=ax2[3, 2])
-
-    sns.lineplot(data=results, x="epoch", y="std_pred_train", ax=ax2[4, 0])
-    sns.lineplot(data=results, x="epoch", y="std_pred_dev", ax=ax2[4, 1])
-    sns.lineplot(data=results, x="epoch", y="std_pred_test", ax=ax2[4, 2])
-
-    figure2.tight_layout()
-    figure2.savefig("./runs/" + file_name + ".png")
-    
-    
-    _, _, _, _, y, y_pred, _ = evaluate(model, train_loader, heterogeneus=conf_model["heterogeneus"], new=new, device=device, convolution_information=conf_train["convolution_information"])
-    train_predictions = pd.DataFrame(columns=["y", "y_pred"])
-    train_predictions["y"] = y
-    train_predictions["y_pred"] = y_pred
-    train_predictions.to_csv("./runs/" + file_name + "_train_predictions.csv")
-    
-    _, _, _, _, y, y_pred, _ = evaluate(model, dev_loader, heterogeneus=conf_model["heterogeneus"], new=new, device=device, convolution_information=conf_train["convolution_information"])
-    dev_predictions = pd.DataFrame(columns=["y", "y_pred"])
-    dev_predictions["y"] = y
-    dev_predictions["y_pred"] = y_pred
-    dev_predictions.to_csv("./runs/" + file_name + "_dev_predictions.csv")
-    
-    _, _, _, _, y, y_pred, _ = evaluate(model, test_loader, heterogeneus=conf_model["heterogeneus"], new=new, device=device, convolution_information=conf_train["convolution_information"])
-    test_predictions = pd.DataFrame(columns=["y", "y_pred"])
-    test_predictions["y"] = y
-    test_predictions["y_pred"] = y_pred
-    test_predictions.to_csv("./runs/" + file_name + "_test_predictions.csv")
+    results.to_csv(out_data_path)
+    torch.save(best_model.state_dict(), out_data_model)
 
 
 if __name__ == "__main__":

@@ -134,7 +134,7 @@ def main():
     for i in range(1, len(conf_data["train-test-data"])):
         load_data.add_dataset(conf_data["train-test-data"][i], train_data=conf_data["train-test-data-train"][i])
     
-    node_features = load_data.get_node_features()[1]
+    node_features = load_data.get_node_shape()[1]
     
     
     if (conf_data["conversion"] == "constraints" or conf_data["conversion"] == "dimensions") and conf_model["heterogeneus"]:

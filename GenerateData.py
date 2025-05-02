@@ -1,5 +1,4 @@
 import numpy as np
-from show_politope import *
 from scipy.optimize import linprog
 from pycvxset import Polytope
 import os
@@ -7,6 +6,7 @@ import argparse
 from tqdm import tqdm
 import math
 
+from src.show_politope import plot_polytope
 
 # Check if the polytope is bounded
 def is_bounded(A, b):
@@ -63,7 +63,7 @@ def check_exact_polytope(original_volume, A, b, m):
 
 
 # Generate n polytopes with m constraints and r dimensions, Ax <= b
-def generate_n_polytopes(n_polytopes, base_path="./data/", seed=0, m=4, r=3, save_images=True, only_exact=False, uniform=True, max_volume=500, normalize=True):
+def generate_n_polytopes(n_polytopes, base_path="./data/", seed=0, m=4, r=3, save_images=True, only_exact=False, uniform=True, max_volume=500):
     rng = np.random.default_rng(seed)
 
     path = base_path + "m_" + str(m) + "_r_" + str(r) + "/"
@@ -137,13 +137,6 @@ def generate_n_polytopes(n_polytopes, base_path="./data/", seed=0, m=4, r=3, sav
         
         np.save(path + "all_polytopes_x.npy", data_x)
         np.save(path + "all_polytopes_y.npy", data_y) 
-    
-    #Normalize the X data and save it
-    if normalize:
-        for i in range(len(data_exact_politope_x)):
-            data_exact_politope_x[i] = data_exact_politope_x[i] / np.linalg.norm(data_exact_politope_x[i])
-            
-        np.save(path + "exact_politopes_x_normalized.npy", data_exact_politope_x)
 
 
 #Main logic of the application
@@ -156,7 +149,6 @@ def main():
     parser.add_argument("--number_polytopes", type=int, default=10000, help="number of polytopes to generate")
     parser.add_argument("--uniform_distribution", type=bool, default=True, help="uniform distribution?")
     parser.add_argument("--max_volume", type=int, default=500, help="max volume (only for uniform distribution)")
-    parser.add_argument("--normalize", type=bool, default=True, help="Normalization of the final data")
     parser.add_argument("--seed", type=int, default=0, help="Seed for the random number generator")
     parser.add_argument("--only_exact", type=bool, default=True, help="Only exact polytopes? (defined by all the constraints)")
 
@@ -173,7 +165,7 @@ def main():
 
     if m > r:
         print("\nGenerating polytopes with m =", m, "and r =", r)
-        generate_n_polytopes(n_polytopes, base_path="./data/", seed=seed, m=m, r=r, only_exact=only_exact, uniform=uniform, max_volume=max_volume, normalize=normalize)
+        generate_n_polytopes(n_polytopes, base_path="./data/", seed=seed, m=m, r=r, only_exact=only_exact, uniform=uniform, max_volume=max_volume)
     else:
         print("The number of constraints must be greater than the number of dimensions")
 

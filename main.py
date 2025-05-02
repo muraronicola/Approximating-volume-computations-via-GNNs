@@ -1,17 +1,16 @@
-from utils import mean_relative_error, mean_squared_error, mean_absolute_error, find_filename, get_paths
 import torch
-from LoadData import LoadData
 import configurations.configurations as conf
 import argparse
-from GNN_Model import GNN_Model
 import numpy as np
 import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
 from tqdm import tqdm
-import os
 import copy
 import shutil
+
+from src.LoadData import LoadData
+from src.GNN_Model import GNN_Model
+from src.utils import mean_relative_error, mean_squared_error, mean_absolute_error, get_paths
+
 
 def train(model, train_loader, optimizer, loss_function, device="cpu"):
     model.train()
@@ -66,21 +65,22 @@ def evaluate(model, eval_loader, device="cpu"):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-path_configuration", type=str, default="./configurations/default.json", help="specify the path to the configuration file")
-
+    
     args = parser.parse_args()
     path_configuration = args.path_configuration
     
     configuration = conf.get_configuration(path_configuration)
     
-    out_conf_path, out_data_path, out_data_model = get_paths(configuration["out_path"], configuration["base_filename"])
-    
-    shutil.copyfile(path_configuration, out_conf_path)
-    
     device = configuration["device"]
     conf_data = configuration["data"]
     conf_train = configuration["train"]
     
-    load_data = LoadData(base_path=conf_data["base_path"], exact_polytopes=conf_data["exact_polytopes"], dev_split_size=conf_data["train-dev-split"], test_split_size=conf_data["train-test-split"], seed=configuration["seed"])
+    out_conf_path, out_data_path, out_data_model = get_paths(configuration["out_path"], configuration["base_filename"])
+    shutil.copyfile(path_configuration, out_conf_path)
+    
+    
+    #Loading the data
+    load_data = LoadData(base_path=conf_data["base_path"], dev_split_size=conf_data["train-dev-split"], test_split_size=conf_data["train-test-split"], seed=configuration["seed"])
     load_data.add_dataset(conf_data["data"][0], split=conf_data["data-split"][0])
     
     for i in range(1, len(conf_data["data"])):
@@ -88,13 +88,12 @@ def main():
     
     train_loader, dev_loader, test_loader = load_data.get_dataloaders(train_batch_size=conf_train["train_batch_size"], eval_batch_size=conf_train["eval_batch_size"], normalize=conf_data["normalize"], n_max_samples=conf_data["max_samples"])
     
-    #Save txt file with configuration
-    
 
+
+    #Creating the model
     model = GNN_Model(hidden_channels=conf_train["hidden_channels"], n_layers=conf_train["n_layers"]).to(device)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=conf_train["learning_rate"])
-    #optimizer = torch.optim.SGD(model.parameters(), lr=0.000005)
     
     if conf_train["loss"] == "mse":
         loss_function = torch.nn.MSELoss()
@@ -102,7 +101,9 @@ def main():
         loss_function = torch.nn.L1Loss()
     else:
         raise ValueError("Loss not supported")
-
+    
+    
+    
     results = pd.DataFrame(columns=["epoch", "loss_train", "mse_train", "mse_dev", "mse_test", "mae_train", "mae_dev", "mae_test", "mre_train", "mre_dev", "mre_test",  "pred_mean_train", "pred_mean_dev", "pred_mean_test", "pred_std_train", "pred_std_dev", "pred_std_test"])
     
     iterator = tqdm(range(1, conf_train["train_epochs"]+1))

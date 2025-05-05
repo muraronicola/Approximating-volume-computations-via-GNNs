@@ -1,7 +1,7 @@
 {
     "seed": 0,
     "device": "cuda:0",
-    "base_filename": "generalization_m_5_r_4",
+    "base_filename": "test_m_4_r_2",
     "out_path": "./out/",
     "inference_only": false,
     "data": {
@@ -9,9 +9,9 @@
         "base_path": "./data/",
         "train-dev-split" : 0.02,
         "train-test-split" : 0.02,
-        "data": ["m_5_r_4"],
+        "data": ["m_4_r_2"],
         "data-split": ["tr-de-te"],
-        "normalize": true
+        "normalize": false
     },
     "train":{ 
         "train_batch_size": 2048,

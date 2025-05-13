@@ -11,7 +11,7 @@
         "train-test-split" : 0.02,
         "data": ["m_3_r_2", "m_4_r_2"],
         "data-split": ["tr-de", "te"],
-        "normalize": true
+        "normalize": false
     },
     "train":{ 
         "train_batch_size": 2048,

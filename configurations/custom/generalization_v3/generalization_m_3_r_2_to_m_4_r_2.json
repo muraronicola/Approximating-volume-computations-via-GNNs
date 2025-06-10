@@ -2,7 +2,7 @@
     "seed": 0,
     "device": "cuda:0",
     "base_filename": "generalization_m_3_r_2_to_m_4_r_2",
-    "out_path": "./out/",
+    "out_path": "./out/generalization_v3/",
     "inference_only": false,
     "data": {
         "max_samples": null,
@@ -10,7 +10,7 @@
         "train-dev-split" : 0.02,
         "train-test-split" : 0.02,
         "data": ["m_3_r_2", "m_4_r_2"],
-        "data-split": ["tr-de", "te"],
+        "data-split": ["tr-de", "de-te"],
         "normalize": false
     },
     "train":{ 

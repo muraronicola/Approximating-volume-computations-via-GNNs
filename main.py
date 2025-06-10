@@ -64,7 +64,7 @@ def evaluate(model, eval_loader, device="cpu"):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-path_configuration", type=str, default="./configurations/default.json", help="specify the path to the configuration file")
+    parser.add_argument("--path_configuration", type=str, default="./configurations/default.json", help="specify the path to the configuration file")
     
     args = parser.parse_args()
     path_configuration = args.path_configuration

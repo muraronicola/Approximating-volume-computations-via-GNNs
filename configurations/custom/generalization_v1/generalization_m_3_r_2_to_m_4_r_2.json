@@ -2,7 +2,7 @@
     "seed": 0,
     "device": "cuda:0",
     "base_filename": "generalization_m_3_r_2_to_m_4_r_2",
-    "out_path": "./out/",
+    "out_path": "./out/generalization_v1/",
     "inference_only": false,
     "data": {
         "max_samples": null,

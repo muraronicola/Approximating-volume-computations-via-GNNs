@@ -1,6 +1,6 @@
 import torch
 from torch.nn import Linear, Dropout
-from torch_geometric.nn import RGCNConv, global_mean_pool, HeteroConv, GCNConv, SAGEConv, GATConv, Linear, GraphConv, ResGatedGraphConv
+from torch_geometric.nn import global_mean_pool, HeteroConv, Linear, ResGatedGraphConv
 
 
 class GNN_Model(torch.nn.Module):
@@ -21,7 +21,6 @@ class GNN_Model(torch.nn.Module):
                 ('c', 'b', 'b'):  ResGatedGraphConv((-1, -1), hidden_channels, edge_dim=1),
                 }, aggr='sum')
             self.convs.append(conv)
-            
         
         self.dropout = Dropout(p=p_drop)
         

@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 
+#Function to plot a polytope using matplotlib (max in 2D or 3D)
 def plot_polytope(polytope, save=False, show=True, filename=None):
     try:
         

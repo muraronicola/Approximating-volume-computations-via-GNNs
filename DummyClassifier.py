@@ -7,7 +7,7 @@ from sklearn.dummy import DummyRegressor
 from sklearn.model_selection import train_test_split
 
 
-
+# Main function to run the dummy classifier evaluation
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--path_configuration", type=str, default="./configurations/default.json", help="specify the path to the configuration file")

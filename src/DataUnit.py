@@ -1,9 +1,9 @@
-import numpy as np
 import torch
-from sklearn.model_selection import train_test_split
 from torch.utils.data import Dataset
-from torch_geometric.data import Data, HeteroData
+from torch_geometric.data import HeteroData
 
+
+# Class for the implementation of the data unit
 class DataUnit(Dataset):
     def __init__(self, x, y):
         
@@ -21,6 +21,8 @@ class DataUnit(Dataset):
     def __getitem__(self, idx):
         return self.data[idx]
     
+    
+    # Convert the data from the input format to a graph format
     def convert_data(self):
         debug = False
         converted_data = []
@@ -38,16 +40,18 @@ class DataUnit(Dataset):
             torch_y = torch.tensor(this_y, dtype=torch.float)
             data_i = HeteroData(y=torch_y)
             
+            
+            # Create node types
             data_x = []
             data_c = []
             data_b = []
             
             for i in range(this_x.shape[1]-1):
-                data_x.append(0)  #None?
+                data_x.append(0)
             
             for i in range(this_x.shape[0]):
-                data_c.append(0)  #None?
-                data_b.append(0)  #None?
+                data_c.append(0) 
+                data_b.append(0)
             
             data_x = torch.tensor(data_x, dtype=torch.float)
             data_i["x"].x = data_x.unsqueeze(1)
@@ -60,7 +64,7 @@ class DataUnit(Dataset):
             
             
             
-            #Edges between dimentions and constraints
+            #Edges between dimensions and constraints
             edge_attr = []
             edge_index = []
             edge_index_reverse = []
@@ -84,7 +88,7 @@ class DataUnit(Dataset):
             edge_index = []
             
             edge_attr.append(0)
-            edge_index.append([0,0])
+            edge_index.append([0, 0])
             
             for i in range(this_x.shape[0]):
                 edge_index.append([i, i])

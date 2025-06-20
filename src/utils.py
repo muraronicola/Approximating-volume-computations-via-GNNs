@@ -1,5 +1,6 @@
 import os
 
+#Returns the mean relative error between two lists
 def mean_relative_error(out, y):
     error = 0
     for i in range(len(out)):
@@ -8,6 +9,7 @@ def mean_relative_error(out, y):
     return error / len(out)
 
 
+# Returns the mean squared error between two lists
 def mean_squared_error(out, y):
     se_global = 0
     
@@ -18,6 +20,7 @@ def mean_squared_error(out, y):
     return se_global / len(out)
 
 
+# Returns the mean absolute error between two lists
 def mean_absolute_error(out, y):
     error_global = 0
     
@@ -28,6 +31,7 @@ def mean_absolute_error(out, y):
     return error_global / len(out)
 
 
+#Gets the next run id based on the existing configuration files in the given path
 def get_run_id(conf_path):
     i = 0
     found = False
@@ -41,11 +45,14 @@ def get_run_id(conf_path):
 
     return i
 
+
+# Generates the folder structure for the output files
 def generate_folder_structure(path):
     if not os.path.exists(path):
         os.makedirs(path)
 
 
+# Function to get the paths for configuration, data, and model files
 def get_paths(out_path, base_filename):
     folder_out_conf_path = out_path + base_filename + "/config/"
     folder_out_data_path = out_path + base_filename + "/data/"

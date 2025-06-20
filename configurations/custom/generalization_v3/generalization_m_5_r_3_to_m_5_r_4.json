@@ -3,7 +3,6 @@
     "device": "cuda:0",
     "base_filename": "generalization_m_5_r_3_to_m_5_r_4",
     "out_path": "./out/generalization_v3/",
-    "inference_only": false,
     "data": {
         "max_samples": null,
         "base_path": "./data/",

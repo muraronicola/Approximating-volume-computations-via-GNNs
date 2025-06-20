@@ -2,3 +2,5 @@
 /data/**/all_polytopes_y.npy
 /data/**/all_polytopes_x.npy
 *.pt
+*.DS_Store
+*.pyc

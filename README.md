@@ -1,6 +1,8 @@
 # Approximating volume computations via GNNs
 Advanced Topics in Machine Learning and Optimization
 
+---
+
 ## Creating the Environment
 
 To create the environment, run the following command:

@@ -72,6 +72,7 @@ python3 ./DummyClassifier.py <path_configuration>
 **Arguments:**
 - `<path_configuration>`: Path of the file containing the configuration.
 
+---
 
 ## Evaluating the results
 To evaluate the results of the GNN, you can view the jupyter notebook in the `analyze_results` folder. The notebook contains the code to load the results and visualize them.

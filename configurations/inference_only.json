@@ -23,7 +23,7 @@
         "train_batch_size": 2048,
         "eval_batch_size": 4096,
         "train_epochs": 5000,
-        "early_stopping": 200,
+        "early_stopping": 50,
         "learning_rate": 0.0005,
         "loss": "l1",
         "dropout": 0.1,

@@ -7,8 +7,8 @@
     "data": {
         "max_samples": null,
         "base_path": "./data/",
-        "train-dev-split" : 0.02,
-        "train-test-split" : 0.02,
+        "train-dev-split" : 0.2,
+        "train-test-split" : 0.2,
         "data": ["m_3_r_2", "m_4_r_2", "m_4_r_3", "m_5_r_3", "m_5_r_4"],
         "data-split": ["tr-de-te", "tr-de-te", "tr-de-te", "tr-de-te", "tr-de-te"],
         "normalize": false
@@ -17,7 +17,7 @@
         "train_batch_size": 2048,
         "eval_batch_size": 4096,
         "train_epochs": 5000,
-        "early_stopping": 200,
+        "early_stopping": 50,
         "learning_rate": 0.0005,
         "loss": "l1",
         "dropout": 0.1,

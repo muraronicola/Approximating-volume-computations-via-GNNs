@@ -55,12 +55,6 @@ python3 ./main.py <path_configuration>
 
 ---
 
-## Changing the configuration
-
-The default configuration file is located in the `configurations` folder.
-The file contains some important parameters such as the data used for training, the number of epochs, the batch size, the learning rate and the output directory for the results.
-
----
 
 ## Dummy Classifier
 
@@ -71,6 +65,13 @@ python3 ./DummyClassifier.py <path_configuration>
 ```
 **Arguments:**
 - `<path_configuration>`: Path of the file containing the configuration.
+
+---
+
+## Changing the configuration
+
+The default configuration file is located in the `configurations` folder.
+The file contains some important parameters such as the data used for training, the number of epochs, the batch size, the learning rate and the output directory for the results.
 
 ---
 

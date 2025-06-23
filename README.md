@@ -1,5 +1,5 @@
 # Approximating volume computations via GNNs
-Advanced Topics in Machine Learning and Optimization
+Project for Advanced Topics in Machine Learning and Optimization
 
 ---
 

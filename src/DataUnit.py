@@ -12,9 +12,6 @@ class DataUnit(Dataset):
         
         self.data = self.convert_data()
         
-        print("DataUnit init")
-        print("len(x)", len(x))
-    
     def __len__(self): 
         return len(self.data)
 

@@ -1,4 +1,5 @@
-# Approximating volume computations via GNNs
+# Approximating Volume Computations via GNNs
+
 Project for Advanced Topics in Machine Learning and Optimization
 
 ---
@@ -11,69 +12,79 @@ To create the environment, run the following command:
 conda env create -f environment.yml
 ```
 
-To execute the other steps, is first necessary to activate the environment:
+Before executing any other steps, activate the environment:
 
 ```bash
 conda activate ADVML
 ```
+
 ---
 
+## Generating the Data
 
-
-
-## Generating the data
-There are already some pre-generated data in the `data` folder. However, if you want to generate new data, you can run the following command:
+Some pre-generated data is available in the `data` folder. To generate new data, run:
 
 ```bash
 python3 ./GenerateData.py <dimensions> <constraints> <number_polytopes> <uniform_distribution> <max_volume> <seed> <only_exact>
 ```
+
 **Arguments:**
 - `<dimensions>`: Number of dimensions of the polytopes.
-- `<constraints>`: Number of constraints of the polytopes.
+- `<constraints>`: Number of constraints for the polytopes.
 - `<number_polytopes>`: Number of polytopes to generate.
-- `<uniform_distribution>`: If set to `True`, the polytopes will be generated using a uniform distribution. If set to `False`, the polytopes will be generated using a normal distribution.
+- `<uniform_distribution>`: If `True`, polytopes are generated using a uniform distribution; if `False`, a normal distribution is used.
 - `<max_volume>`: Maximum volume of the polytopes.
-- `<seed>`: Seed for the random number generator.
-- `<only_exact>`: If set to `True`, only polytopes without reduntant constraints will be generated. If set to `False`, polytopes with redundant constraints will also be generated.
-
-
+- `<seed>`: Random seed.
+- `<only_exact>`: If `True`, only polytopes without redundant constraints are generated; if `False`, polytopes may include redundant constraints.
 
 ---
 
 ## Training the GNN
 
-
-For executing the code, run the following command:
+To train the GNN, run:
 
 ```bash
 python3 ./main.py <path_configuration>
 ```
 
 **Arguments:**
-
-- `<path_configuration>`: Path of the file containing the configuration.
+- `<path_configuration>`: Path to the configuration file.
 
 ---
 
-
 ## Dummy Classifier
 
-The file `dummy_classifier.py` contains the implementation of a dummy classifier that can be used to compare the results of the GNN with a simple baseline. For executing the dummy classifier, run the following command:
+The file `dummy_classifier.py` implements a baseline dummy classifier to compare against the GNN results. To execute it, run:
 
 ```bash
 python3 ./DummyClassifier.py <path_configuration>
 ```
+
 **Arguments:**
-- `<path_configuration>`: Path of the file containing the configuration.
+- `<path_configuration>`: Path to the configuration file.
 
 ---
 
-## Changing the configuration
+## Modifying the Configuration
 
-The default configuration file is located in the `configurations` folder.
-The file contains some important parameters such as the data used for training, the number of epochs, the batch size, the learning rate and the output directory for the results. In order to change the data used for training, the `data` and `data-split` fields in the configuration file must be modified. The `data` field contains the names of the data files to be used, while the `data-split` field contains the split of the data into training `(tr)`, validation `(de)` and test sets `(te)`. Both are arrays, so multiple data files can be used for training and multiple splits can be defined. Each component of the `data` array must have a corresponding component in the `data-split` array.
+The default configuration files are located in the `configurations` folder.
+
+These files include parameters such as:
+- Training dataset
+- Number of epochs
+- Batch size
+- Learning rate
+- Output directory for results
+
+To change the dataset used for training, modify the `data` and `data-split` fields in the configuration file:
+
+- `data`: List of data file names.
+- `data-split`: Corresponding list indicating how each dataset is used (`tr` for training, `de` for validation, `te` for testing). Multiple options are available, separated by `-` (e.g., `tr-de-te` or `tr-de`).
+
+Both fields are arrays and each entry in `data` must correspond to an entry in `data-split`.
 
 ---
 
-## Evaluating the results
-To evaluate the results of the GNN, you can view the jupyter notebook in the `analyze_results` folder. The notebook contains the code to load the results and visualize them.
+## Evaluating the Results
+
+To evaluate the GNN's results, use the Jupyter notebook in the `analyze_results` folder. The notebook contains tools to load and visualize the results.

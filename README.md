@@ -71,7 +71,7 @@ python3 ./DummyClassifier.py <path_configuration>
 ## Changing the configuration
 
 The default configuration file is located in the `configurations` folder.
-The file contains some important parameters such as the data used for training, the number of epochs, the batch size, the learning rate and the output directory for the results.
+The file contains some important parameters such as the data used for training, the number of epochs, the batch size, the learning rate and the output directory for the results. In order to change the data used for training, the `data` and `data-split` fields in the configuration file must be modified. The `data` field contains the names of the data files to be used, while the `data-split` field contains the split of the data into training `(tr)`, validation `(de)` and test sets `(te)`. Both are arrays, so multiple data files can be used for training and multiple splits can be defined. Each component of the `data` array must have a corresponding component in the `data-split` array.
 
 ---
 
